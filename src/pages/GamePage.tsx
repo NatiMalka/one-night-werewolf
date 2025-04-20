@@ -20,7 +20,8 @@ const GamePage: React.FC = () => {
     sendChatMessage, 
     votePlayer,
     playAgain,
-    leaveRoom 
+    leaveRoom,
+    skipCurrentNightAction
   } = useGame();
   
   // Add comment to address unused variables that will be needed for future implementation
@@ -31,7 +32,6 @@ const GamePage: React.FC = () => {
     targets: []
   });
   
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [robberTarget, setRobberTarget] = useState<string>('');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [troublemakerTargets, setTroublemakerTargets] = useState<string[]>([]);
@@ -88,7 +88,16 @@ const GamePage: React.FC = () => {
         
       case 'robber':
         if (robberTarget) {
-          performNightAction('robber', { targetPlayerId: robberTarget });
+          // Get the player's current role for action data
+          const targetPlayer = gameRoom.players.find(p => p.id === robberTarget);
+          const targetRole = targetPlayer?.currentRole || 'villager';
+          
+          performNightAction('robber', { 
+            targetPlayerId: robberTarget,
+            targetPlayerName: targetPlayer?.name,
+            targetRole,
+            originalRobberRole: currentRole 
+          });
         }
         break;
         
@@ -117,6 +126,9 @@ const GamePage: React.FC = () => {
   
   // Render for Night Phase
   const renderNightPhase = () => {
+    // Check if current player is the host
+    const isHost = currentPlayer.isHost;
+    
     return (
       <div className="flex flex-col items-center justify-center py-10">
         <h2 className="text-2xl font-bold text-white mb-6">Night Phase</h2>
@@ -160,6 +172,38 @@ const GamePage: React.FC = () => {
             <Button onClick={() => setShowActionModal(true)}>
               Perform Action
             </Button>
+          )}
+
+          {/* Host-only skip button */}
+          {isHost && (
+            <div className="mt-4 pt-4 border-t border-gray-800">
+              <p className="text-sm text-gray-500 mb-2">Host Controls</p>
+              <p className="text-xs text-gray-400 mb-3">
+                As host, you can skip the current role's timer and move immediately 
+                to the next role or to the day phase.
+              </p>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => {
+                  const currentRole = gameRoom.currentNightAction
+                    ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
+                    : 'current';
+                  
+                  const isConfirmed = window.confirm(
+                    `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`
+                  );
+                  
+                  if (isConfirmed) {
+                    skipCurrentNightAction();
+                  }
+                }}
+              >
+                Skip {gameRoom.currentNightAction 
+                  ? `${gameRoom.currentNightAction.charAt(0).toUpperCase()}${gameRoom.currentNightAction.slice(1)}` 
+                  : 'Current'} Timer
+              </Button>
+            </div>
           )}
         </div>
         
@@ -607,7 +651,274 @@ const GamePage: React.FC = () => {
         break;
       }
       
-      // Add other role actions here...
+      case 'troublemaker': {
+        // Determine if two players have been selected
+        const hasSelectedPlayers = troublemakerTargets.length === 2;
+        
+        // Get the selected players
+        const selectedPlayers = gameRoom.players.filter(
+          p => troublemakerTargets.includes(p.id)
+        );
+        
+        actionContent = (
+          <div>
+            <p className="text-gray-300 mb-4">
+              As the Troublemaker, you may exchange the roles of two other players without looking at them.
+            </p>
+            
+            {!hasSelectedPlayers ? (
+              <div>
+                <h4 className="font-semibold text-white mb-2">Select two players to swap roles:</h4>
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                  {gameRoom.players
+                    .filter(p => p.id !== currentPlayer.id)
+                    .map(player => (
+                      <Button 
+                        key={player.id}
+                        size="sm"
+                        variant={troublemakerTargets.includes(player.id) ? 'primary' : 'secondary'}
+                        onClick={() => {
+                          // Toggle selection, maintaining max of 2 players
+                          let newTargets = [...troublemakerTargets];
+                          
+                          if (newTargets.includes(player.id)) {
+                            newTargets = newTargets.filter(id => id !== player.id);
+                          } else if (newTargets.length < 2) {
+                            newTargets.push(player.id);
+                          }
+                          
+                          setTroublemakerTargets(newTargets);
+                        }}
+                        disabled={!troublemakerTargets.includes(player.id) && troublemakerTargets.length >= 2}
+                      >
+                        {player.name}
+                      </Button>
+                    ))
+                  }
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                  <h4 className="font-semibold text-white mb-2">You've selected:</h4>
+                  <div className="flex flex-col gap-2">
+                    {selectedPlayers.map(player => (
+                      <div key={player.id} className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-2">
+                          {player.name.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-indigo-400">{player.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex justify-center mb-4">
+                  <div className="bg-gray-800 rounded-full p-3">
+                    <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </div>
+                </div>
+                
+                <p className="text-gray-300 text-center">
+                  These players' roles will be swapped without you knowing what they are.
+                </p>
+                
+                <div className="mt-4">
+                  <Button 
+                    variant="secondary" 
+                    fullWidth 
+                    onClick={() => setTroublemakerTargets([])}
+                  >
+                    Change Selection
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        break;
+      }
+      
+      case 'robber': {
+        // Determine if a player has been selected
+        const hasSelectedPlayer = !!robberTarget;
+        
+        // Get the selected player
+        const selectedPlayer = hasSelectedPlayer
+          ? gameRoom.players.find(p => p.id === robberTarget)
+          : null;
+        
+        actionContent = (
+          <div>
+            <p className="text-gray-300 mb-4">
+              As the Robber, you may exchange your card with another player's card and then view your new card.
+              After the swap, you'll play as your new role for the rest of the game.
+            </p>
+            
+            {!hasSelectedPlayer ? (
+              <div>
+                <h4 className="font-semibold text-white mb-2">Select a player to rob:</h4>
+                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                  {gameRoom.players
+                    .filter(p => p.id !== currentPlayer.id) // Cannot rob yourself
+                    .map(player => (
+                      <Button 
+                        key={player.id}
+                        size="sm"
+                        variant={robberTarget === player.id ? 'primary' : 'secondary'}
+                        onClick={() => setRobberTarget(player.id)}
+                      >
+                        {player.name}
+                      </Button>
+                    ))
+                  }
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="bg-gray-800 p-4 rounded-lg mb-4">
+                  <h4 className="font-semibold text-white mb-2">You've robbed:</h4>
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-2">
+                      {selectedPlayer?.name.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-indigo-400">{selectedPlayer?.name}</span>
+                  </div>
+                  
+                  <div className="flex justify-center gap-8 mt-4 mb-4">
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm text-gray-500 mb-2">Your Original Role</p>
+                      <Card 
+                        role={originalRole} 
+                        isRevealed={true}
+                        size="md"
+                        className="mb-2"
+                      />
+                      <p className="font-semibold text-indigo-400">
+                        {originalRole.charAt(0).toUpperCase() + originalRole.slice(1)}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      <div className="rounded-full bg-gray-700 p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm text-gray-500 mb-2">Their Original Role</p>
+                      <Card 
+                        role={selectedPlayer?.currentRole || 'villager'} 
+                        isRevealed={true}
+                        size="md"
+                        className="mb-2"
+                      />
+                      <p className="font-semibold text-indigo-400">
+                        {selectedPlayer?.currentRole 
+                          ? selectedPlayer.currentRole.charAt(0).toUpperCase() + selectedPlayer.currentRole.slice(1) 
+                          : 'Villager'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-6 pt-4 border-t border-gray-700">
+                    <div className="text-center">
+                      <h4 className="font-semibold text-yellow-400 mb-3">Your Roles Have Been Swapped!</h4>
+                      <p className="text-gray-300 mb-3">Your new role is:</p>
+                      <div className="flex justify-center">
+                        <Card 
+                          role={selectedPlayer?.currentRole || 'villager'} 
+                          isRevealed={true}
+                          size="lg"
+                          className="mb-2"
+                        />
+                      </div>
+                      <p className="font-semibold text-lg text-indigo-400">
+                        {selectedPlayer?.currentRole 
+                          ? selectedPlayer.currentRole.charAt(0).toUpperCase() + selectedPlayer.currentRole.slice(1) 
+                          : 'Villager'}
+                      </p>
+                      
+                      <p className="text-yellow-400 mt-4 text-sm">
+                        Remember your new role! The other player won't know their role has changed.
+                      </p>
+                      <p className="text-gray-400 mt-2 text-sm">
+                        You're now part of the {selectedPlayer?.currentRole === 'werewolf' ? 'Werewolf' : 'Village'} team
+                        and will win or lose with them.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4">
+                  <Button 
+                    variant="secondary" 
+                    fullWidth 
+                    onClick={() => setRobberTarget('')}
+                  >
+                    Change Selection
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        break;
+      }
+      
+      case 'drunk': {
+        // Show a message for now
+        actionContent = (
+          <div>
+            <p className="text-gray-300 mb-4">
+              As the Drunk, you may exchange your card with one from the center without looking at it.
+            </p>
+            
+            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-4">
+              <p className="text-yellow-400">
+                The Drunk role action will be implemented in a future update.
+              </p>
+            </div>
+          </div>
+        );
+        break;
+      }
+      
+      case 'insomniac': {
+        // Show a view of the player's current role
+        actionContent = (
+          <div>
+            <p className="text-gray-300 mb-4">
+              As the Insomniac, you wake up at the end of the night to check if your role has changed.
+            </p>
+            
+            <div className="bg-gray-800 p-4 rounded-lg text-center">
+              <p className="text-gray-300 mb-2">Your current role is:</p>
+              <div className="flex justify-center mb-2">
+                <Card 
+                  role={currentRole} 
+                  isRevealed={true}
+                  size="md"
+                />
+              </div>
+              <p className="font-semibold text-indigo-400">
+                {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
+              </p>
+              
+              {originalRole !== currentRole && (
+                <p className="text-yellow-400 mt-4">
+                  Your role has changed from {originalRole.charAt(0).toUpperCase() + originalRole.slice(1)}!
+                </p>
+              )}
+            </div>
+          </div>
+        );
+        break;
+      }
       
       default:
         actionContent = (
@@ -640,11 +951,14 @@ const GamePage: React.FC = () => {
             <Button
               onClick={handleNightActionSubmit}
               disabled={
-                action === 'seer' && 
+                (action === 'seer' && 
                 !(
                   (seerSelection.type === 'player' && seerSelection.targets.length === 1) || 
                   (seerSelection.type === 'center' && seerSelection.targets.length === 2)
-                )
+                )) ||
+                (action === 'troublemaker' && troublemakerTargets.length !== 2) ||
+                (action === 'robber' && !robberTarget) ||
+                (action === 'drunk' && !drunkTarget)
               }
             >
               Submit

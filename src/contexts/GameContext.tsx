@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import firebaseGameService from '../utils/firebaseGameService';
 import { GameRoom, Player, Role, ChatMessage, NightAction } from '../types';
 import { dealRoles } from '../utils/gameUtils';
+import { database } from '../utils/firebaseConfig';
+import { ref, set, push, onValue, off, remove, update, get } from 'firebase/database';
 
 interface GameContextProps {
   gameRoom: GameRoom | null;
@@ -21,6 +23,7 @@ interface GameContextProps {
   votePlayer: (playerId: string) => Promise<void>;
   setReady: (isReady: boolean) => Promise<void>;
   playAgain: () => Promise<void>;
+  skipCurrentNightAction: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -433,6 +436,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
   };
   
+  // Skip the current night action (host only)
+  const skipCurrentNightAction = async (): Promise<void> => {
+    if (!gameRoom || !currentPlayer || !currentPlayer.isHost || gameRoom.phase !== 'night') return;
+    
+    try {
+      // Get the current night action
+      const action = gameRoom.currentNightAction;
+      if (!action) return;
+      
+      // Perform an empty action to move to the next phase
+      await firebaseGameService.performNightAction(gameRoom.code, action, { skippedByHost: true });
+    } catch (error) {
+      console.error("Error skipping night action:", error);
+      setError("Failed to skip night action");
+      throw error;
+    }
+  };
+  
   const value = {
     gameRoom,
     currentPlayer,
@@ -448,7 +469,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     sendChatMessage,
     votePlayer,
     setReady,
-    playAgain
+    playAgain,
+    skipCurrentNightAction
   };
   
   return (

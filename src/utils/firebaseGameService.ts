@@ -200,6 +200,30 @@ class FirebaseGameService {
           }
         }
         
+        // Add Robber special action handling
+        if (action === 'robber' && actionData.targetPlayerId) {
+          // Store the robbed card information in a special field that the robber player can access
+          // This will be used to show the card when the next night action starts
+          const robberPlayerId = Object.keys(roomData.players).find(
+            id => roomData.players[id].originalRole === 'robber'
+          );
+          
+          if (robberPlayerId) {
+            // Store the robber result data as a separate entry that will be displayed later
+            const targetPlayerId = actionData.targetPlayerId as string;
+            const targetPlayer = roomData.players[targetPlayerId];
+            const robberPlayer = roomData.players[robberPlayerId];
+            
+            // Create a notification for the robber to see when actions are complete
+            roleUpdates[`players/${robberPlayerId}/robbedRole`] = {
+              targetPlayerId: targetPlayerId,
+              targetPlayerName: targetPlayer.name,
+              targetRole: targetPlayer.currentRole,
+              originalRobberRole: robberPlayer.currentRole,
+            };
+          }
+        }
+        
         // Determine potential night actions based on selected roles
         const potentialActions: NightAction[] = [];
         

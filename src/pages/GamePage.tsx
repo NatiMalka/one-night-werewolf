@@ -106,6 +106,9 @@ const GamePage: React.FC = () => {
             targetRole,
             originalRobberRole: currentRole 
           });
+          
+          // Show a message that they've successfully robbed a player
+          alert(`You've successfully robbed ${targetPlayer?.name}! You'll be able to see your new role later by clicking on "View Your Role".`);
         }
         break;
         
@@ -581,6 +584,57 @@ const GamePage: React.FC = () => {
           
           <p className="text-gray-300 text-center mb-4">{description}</p>
           
+          {originalRole === 'robber' && currentPlayer.robbedRole && (
+            <div className="bg-gray-800 p-4 rounded-lg w-full mb-4">
+              <p className="text-yellow-400 text-sm mb-1">Robber Result</p>
+              <p className="text-gray-300 mb-2">
+                You robbed <span className="font-semibold">{currentPlayer.robbedRole.targetPlayerName}</span> and took their role.
+              </p>
+              
+              <div className="flex justify-center gap-8 mt-4 mb-4">
+                <div className="flex flex-col items-center">
+                  <p className="text-sm text-gray-500 mb-2">Your Original Role</p>
+                  <Card 
+                    role="robber" 
+                    isRevealed={true}
+                    size="md"
+                    className="mb-2"
+                  />
+                  <p className="font-semibold text-indigo-400">
+                    Robber
+                  </p>
+                </div>
+                
+                <div className="flex items-center">
+                  <div className="rounded-full bg-gray-700 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <p className="text-sm text-gray-500 mb-2">Your New Role</p>
+                  <Card 
+                    role={currentPlayer.robbedRole.targetRole || 'villager'} 
+                    isRevealed={true}
+                    size="md"
+                    className="mb-2"
+                  />
+                  <p className="font-semibold text-indigo-400">
+                    {currentPlayer.robbedRole.targetRole 
+                      ? currentPlayer.robbedRole.targetRole.charAt(0).toUpperCase() + currentPlayer.robbedRole.targetRole.slice(1) 
+                      : 'Villager'}
+                  </p>
+                </div>
+              </div>
+              
+              <p className="text-yellow-400 mt-2 text-sm text-center">
+                Remember your new role! The other player won't know their role has changed.
+              </p>
+            </div>
+          )}
+          
           {roleChanged && (
             <div className="bg-gray-800 p-4 rounded-lg w-full mb-4">
               <p className="text-yellow-400 text-sm mb-1">Role Change</p>
@@ -914,112 +968,34 @@ const GamePage: React.FC = () => {
               After the swap, you'll play as your new role for the rest of the game.
             </p>
             
-            {!hasSelectedPlayer ? (
-              <div>
-                <h4 className="font-semibold text-white mb-2">Select a player to rob:</h4>
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                  {gameRoom.players
-                    .filter(p => p.id !== currentPlayer.id) // Cannot rob yourself
-                    .map(player => (
-                      <Button 
-                        key={player.id}
-                        size="sm"
-                        variant={robberTarget === player.id ? 'primary' : 'secondary'}
-                        onClick={() => setRobberTarget(player.id)}
-                      >
-                        {player.name}
-                      </Button>
-                    ))
-                  }
-                </div>
+            <div>
+              <h4 className="font-semibold text-white mb-2">Select a player to rob:</h4>
+              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
+                {gameRoom.players
+                  .filter(p => p.id !== currentPlayer.id) // Cannot rob yourself
+                  .map(player => (
+                    <Button 
+                      key={player.id}
+                      size="sm"
+                      variant={robberTarget === player.id ? 'primary' : 'secondary'}
+                      onClick={() => setRobberTarget(player.id)}
+                    >
+                      {player.name}
+                    </Button>
+                  ))
+                }
               </div>
-            ) : (
-              <div>
-                <div className="bg-gray-800 p-4 rounded-lg mb-4">
-                  <h4 className="font-semibold text-white mb-2">You've robbed:</h4>
-                  <div className="flex items-center mb-4">
-                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center mr-2">
-                      {selectedPlayer?.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-indigo-400">{selectedPlayer?.name}</span>
-                  </div>
-                  
-                  <div className="flex justify-center gap-8 mt-4 mb-4">
-                    <div className="flex flex-col items-center">
-                      <p className="text-sm text-gray-500 mb-2">Your Original Role</p>
-                      <Card 
-                        role={originalRole} 
-                        isRevealed={true}
-                        size="md"
-                        className="mb-2"
-                      />
-                      <p className="font-semibold text-indigo-400">
-                        {originalRole.charAt(0).toUpperCase() + originalRole.slice(1)}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center">
-                      <div className="rounded-full bg-gray-700 p-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                        </svg>
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col items-center">
-                      <p className="text-sm text-gray-500 mb-2">Their Original Role</p>
-                      <Card 
-                        role={selectedPlayer?.currentRole || 'villager'} 
-                        isRevealed={true}
-                        size="md"
-                        className="mb-2"
-                      />
-                      <p className="font-semibold text-indigo-400">
-                        {selectedPlayer?.currentRole 
-                          ? selectedPlayer.currentRole.charAt(0).toUpperCase() + selectedPlayer.currentRole.slice(1) 
-                          : 'Villager'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 pt-4 border-t border-gray-700">
-                    <div className="text-center">
-                      <h4 className="font-semibold text-yellow-400 mb-3">Your Roles Have Been Swapped!</h4>
-                      <p className="text-gray-300 mb-3">Your new role is:</p>
-                      <div className="flex justify-center">
-                        <Card 
-                          role={selectedPlayer?.currentRole || 'villager'} 
-                          isRevealed={true}
-                          size="lg"
-                          className="mb-2"
-                        />
-                      </div>
-                      <p className="font-semibold text-lg text-indigo-400">
-                        {selectedPlayer?.currentRole 
-                          ? selectedPlayer.currentRole.charAt(0).toUpperCase() + selectedPlayer.currentRole.slice(1) 
-                          : 'Villager'}
-                      </p>
-                      
-                      <p className="text-yellow-400 mt-4 text-sm">
-                        Remember your new role! The other player won't know their role has changed.
-                      </p>
-                      <p className="text-gray-400 mt-2 text-sm">
-                        You're now part of the {selectedPlayer?.currentRole === 'werewolf' ? 'Werewolf' : 'Village'} team
-                        and will win or lose with them.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-4">
-                  <Button 
-                    variant="secondary" 
-                    fullWidth 
-                    onClick={() => setRobberTarget('')}
-                  >
-                    Change Selection
-                  </Button>
-                </div>
+            </div>
+            
+            {hasSelectedPlayer && (
+              <div className="mt-4 bg-indigo-900/30 border border-indigo-700 rounded-lg p-4">
+                <p className="text-indigo-300 font-semibold mb-2">
+                  You've selected {selectedPlayer?.name} to rob
+                </p>
+                <p className="text-gray-300">
+                  When you click Submit, your card will be swapped with {selectedPlayer?.name}'s card.
+                  You'll then see your new role, but {selectedPlayer?.name} won't know their role has changed.
+                </p>
               </div>
             )}
           </div>

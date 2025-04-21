@@ -37,6 +37,12 @@ export type Player = {
   isConnected: boolean;
   avatar: string;
   votedFor?: string | null;
+  robbedRole?: {
+    targetPlayerId: string;
+    targetPlayerName: string;
+    targetRole: Role;
+    originalRobberRole: Role;
+  };
 };
 
 export type CenterCard = {

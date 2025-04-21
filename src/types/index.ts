@@ -57,6 +57,9 @@ export type GameRoom = {
   actionLog: string[];
   winningTeam?: Team;
   created: number;
+  eliminatedPlayerIds?: string[];
+  hunterVictimId?: string;
+  voteCounts?: Record<string, number>;
 };
 
 export type ChatMessage = {

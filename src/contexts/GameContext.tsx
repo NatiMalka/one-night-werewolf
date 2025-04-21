@@ -24,6 +24,7 @@ interface GameContextProps {
   setReady: (isReady: boolean) => Promise<void>;
   playAgain: () => Promise<void>;
   skipCurrentNightAction: () => Promise<void>;
+  startVotingPhase: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -454,6 +455,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
   };
   
+  // Start the voting phase (host only)
+  const startVotingPhase = async (): Promise<void> => {
+    if (!gameRoom || !currentPlayer || !currentPlayer.isHost || gameRoom.phase !== 'day') return;
+    
+    try {
+      await firebaseGameService.startVotingPhase(gameRoom.code);
+    } catch (error) {
+      console.error("Error starting voting phase:", error);
+      setError("Failed to start voting phase");
+      throw error;
+    }
+  };
+  
   const value = {
     gameRoom,
     currentPlayer,
@@ -470,7 +484,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     votePlayer,
     setReady,
     playAgain,
-    skipCurrentNightAction
+    skipCurrentNightAction,
+    startVotingPhase
   };
   
   return (

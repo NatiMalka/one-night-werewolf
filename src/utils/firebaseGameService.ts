@@ -291,7 +291,120 @@ class FirebaseGameService {
       return update(ref(database, `rooms/${roomCode}`), {
         antiCache: this.getAntiCacheParam()
       });
+    })
+    .then(() => {
+      // Check if all players have voted
+      return get(ref(database, `rooms/${roomCode}`));
+    })
+    .then((snapshot) => {
+      if (snapshot.exists()) {
+        const roomData = snapshot.val();
+        const players = Object.values(roomData.players) as Player[];
+        
+        // Check if all players have cast their vote
+        const allVoted = players.every(player => player.votedFor);
+        
+        if (allVoted) {
+          console.log("All players have voted, determining results");
+          return this.determineGameResults(roomCode);
+        }
+      }
+    })
+    .catch(error => {
+      console.error("Error casting vote:", error);
+      throw error;
     });
+  }
+
+  // Move from day phase to voting phase
+  startVotingPhase(roomCode: string): Promise<void> {
+    console.log("Starting voting phase for room:", roomCode);
+    
+    return update(ref(database, `rooms/${roomCode}`), {
+      phase: 'voting',
+      antiCache: this.getAntiCacheParam()
+    })
+    .then(() => {
+      console.log("Voting phase started successfully");
+    })
+    .catch(error => {
+      console.error("Failed to start voting phase:", error);
+      throw error;
+    });
+  }
+  
+  // Determine game results after all players have voted
+  determineGameResults(roomCode: string): Promise<void> {
+    console.log("Determining game results for room:", roomCode);
+    
+    return get(ref(database, `rooms/${roomCode}`))
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          const roomData = snapshot.val();
+          const players = Object.values(roomData.players) as Player[];
+          
+          // Count votes for each player
+          const voteCounts: Record<string, number> = {};
+          players.forEach(player => {
+            if (player.votedFor) {
+              voteCounts[player.votedFor] = (voteCounts[player.votedFor] || 0) + 1;
+            }
+          });
+          
+          // Determine which players were eliminated (highest vote count)
+          const maxVotes = Math.max(...Object.values(voteCounts), 0);
+          const eliminatedPlayerIds = Object.keys(voteCounts).filter(
+            id => voteCounts[id] === maxVotes
+          );
+          
+          // Check for Hunter role among eliminated
+          let hunterVictimId: string | null = null;
+          for (const id of eliminatedPlayerIds) {
+            const player = players.find(p => p.id === id);
+            if (player && player.currentRole === 'hunter') {
+              // If hunter is eliminated, find who they voted for
+              hunterVictimId = player.votedFor || null;
+            }
+          }
+          
+          // Determine winning team
+          let winningTeam: 'village' | 'werewolf' | 'tanner' | undefined;
+          
+          // Tanner check first - if tanner is eliminated, tanner wins
+          const tannerWins = eliminatedPlayerIds.some(id => {
+            const player = players.find(p => p.id === id);
+            return player && player.currentRole === 'tanner';
+          });
+          
+          if (tannerWins) {
+            winningTeam = 'tanner';
+          } else {
+            // Check if any werewolf was eliminated
+            const werewolfEliminated = eliminatedPlayerIds.some(id => {
+              const player = players.find(p => p.id === id);
+              return player && player.currentRole === 'werewolf';
+            });
+            
+            // If any werewolf was eliminated, village wins
+            // Otherwise, werewolf team wins
+            winningTeam = werewolfEliminated ? 'village' : 'werewolf';
+          }
+          
+          // Update room with results
+          return update(ref(database, `rooms/${roomCode}`), {
+            phase: 'results',
+            winningTeam: winningTeam,
+            eliminatedPlayerIds: eliminatedPlayerIds,
+            hunterVictimId: hunterVictimId,
+            voteCounts: voteCounts,
+            antiCache: this.getAntiCacheParam()
+          });
+        }
+      })
+      .catch(error => {
+        console.error("Error determining game results:", error);
+        throw error;
+      });
   }
 
   // Set player ready state

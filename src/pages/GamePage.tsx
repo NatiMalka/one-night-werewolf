@@ -232,85 +232,262 @@ const GamePage: React.FC = () => {
     const isHost = currentPlayer.isHost;
     
     return (
-      <div className="flex flex-col items-center justify-center py-10">
-        <h2 className="text-2xl font-bold text-white mb-6">Night Phase</h2>
-        
-        <div className="mb-6">
-          <Timer 
-            key={`night-timer-${gameRoom.nightTimeRemaining || 60}`}
-            seconds={gameRoom.nightTimeRemaining || 60} 
-            large 
-            onComplete={() => {
-              if (gameRoom.currentNightAction) {
-                // If player can perform the action but hasn't done so, auto-submit
-                if (canPerformAction && gameRoom.currentNightAction) {
-                  // Auto-submit with empty data
-                  performNightAction(gameRoom.currentNightAction, {});
-                  setShowActionModal(false);
-                }
-                // For players who can't perform this action, we still need to send a skip
-                else if (!canPerformAction) {
-                  performNightAction(gameRoom.currentNightAction, {});
-                }
-              }
-            }} 
-          />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header with mystical moon background and timer */}
+        <div className="relative mb-8 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 rounded-xl overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-cover bg-center opacity-30" 
+               style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+          
+          {/* Animated stars */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="stars-1"></div>
+            <div className="stars-2"></div>
+            <div className="stars-3"></div>
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-10 flex justify-between items-center p-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white flex items-center">
+                <span className="mr-3">🌙</span>
+                Night Phase
+              </h2>
+              <p className="text-purple-200 mt-1">The village sleeps while secret roles are performed</p>
+            </div>
+            <div className="flex items-center">
+              <div className="bg-gray-900/70 backdrop-blur-sm px-6 py-4 rounded-lg shadow-inner border border-purple-700/30">
+                <Timer 
+                  key={`night-timer-${gameRoom.nightTimeRemaining || 60}`}
+                  seconds={gameRoom.nightTimeRemaining || 60} 
+                  large 
+                  onComplete={() => {
+                    if (gameRoom.currentNightAction) {
+                      // If player can perform the action but hasn't done so, auto-submit
+                      if (canPerformAction && gameRoom.currentNightAction) {
+                        // Auto-submit with empty data
+                        performNightAction(gameRoom.currentNightAction, {});
+                        setShowActionModal(false);
+                      }
+                      // For players who can't perform this action, we still need to send a skip
+                      else if (!canPerformAction) {
+                        performNightAction(gameRoom.currentNightAction, {});
+                      }
+                    }
+                  }} 
+                />
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="bg-gray-900 rounded-lg p-6 max-w-md mb-6 text-center">
-          <h3 className="text-xl font-semibold text-white mb-3">
-            {gameRoom.currentNightAction 
-              ? `${gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)} Wake Up!`
-              : 'Waiting for next action...'}
-          </h3>
-          
-          <p className="text-gray-400 mb-4">
-            {canPerformAction 
-              ? "It's your turn to perform your role's action"
-              : "Please wait while other players perform their actions"}
-          </p>
-          
-          {canPerformAction && (
-            <Button onClick={() => setShowActionModal(true)}>
-              Perform Action
-            </Button>
-          )}
-
-          {/* Host-only skip button */}
-          {isHost && (
-            <div className="mt-4 pt-4 border-t border-gray-800">
-              <p className="text-sm text-gray-500 mb-2">Host Controls</p>
-              <p className="text-xs text-gray-400 mb-3">
-                As host, you can skip the current role's timer and move immediately 
-                to the next role or to the day phase.
-              </p>
-              <Button 
-                variant="secondary" 
-                size="sm"
-                onClick={() => {
-                  const currentRole = gameRoom.currentNightAction
-                    ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
-                    : 'current';
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Current Action Panel */}
+          <div className="md:col-span-2">
+            <div className="bg-gradient-to-br from-indigo-900/80 to-gray-900 rounded-xl shadow-2xl overflow-hidden border border-indigo-900/30">
+              <div className="relative">
+                {/* Decorative top element */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                
+                <div className="p-8 text-center">
+                  <div className="mb-6 flex justify-center">
+                    <div className={`transform transition-all duration-1000 ${gameRoom.currentNightAction ? 'scale-100 opacity-100' : 'scale-95 opacity-70'}`}>
+                      <div className="relative w-32 h-32 flex items-center justify-center mb-4 mx-auto">
+                        <div className="absolute inset-0 bg-purple-900/30 rounded-full animate-pulse-slow"></div>
+                        <div className="absolute inset-2 bg-indigo-900/40 rounded-full animate-pulse-slow animation-delay-300"></div>
+                        <div className="relative z-10 text-5xl">
+                          {gameRoom.currentNightAction === 'werewolves' && '🐺'}
+                          {gameRoom.currentNightAction === 'seer' && '👁️'}
+                          {gameRoom.currentNightAction === 'robber' && '🔄'}
+                          {gameRoom.currentNightAction === 'troublemaker' && '👥'}
+                          {gameRoom.currentNightAction === 'drunk' && '🍺'}
+                          {gameRoom.currentNightAction === 'insomniac' && '😴'}
+                          {!gameRoom.currentNightAction && '💤'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                   
-                  showConfirmation(
-                    `Skip ${currentRole} Timer`,
-                    `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`,
-                    skipCurrentNightAction
-                  );
-                }}
+                  <h3 className="text-3xl font-bold text-white mb-4 tracking-wider">
+                    {gameRoom.currentNightAction 
+                      ? `${gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)} Wake Up!`
+                      : 'Everyone is asleep...'}
+                  </h3>
+                  
+                  <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-5 max-w-xl mx-auto border border-indigo-800/30">
+                    <p className="text-xl text-gray-300 mb-6">
+                      {canPerformAction 
+                        ? "It's your turn to perform your role's action"
+                        : "Please wait while other players perform their actions"}
+                    </p>
+                    
+                    {canPerformAction ? (
+                      <Button 
+                        onClick={() => setShowActionModal(true)}
+                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 text-lg rounded-lg transition-all transform hover:translate-y-[-2px] shadow-lg hover:shadow-xl"
+                      >
+                        <span className="flex items-center justify-center">
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          Perform Action
+                        </span>
+                      </Button>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <div className="inline-flex items-center px-4 py-2 bg-gray-800 text-gray-400 rounded-lg">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Waiting for other players...
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Controls Column */}
+          <div className="space-y-6">
+            {/* View Role Button */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-purple-800/30 p-6">
+              <Button 
+                variant="ghost" 
+                fullWidth 
+                onClick={() => setShowRoleModal(true)}
+                className="bg-purple-900/50 hover:bg-purple-800/70 text-white border border-purple-700/50 shadow-inner py-4 text-lg"
               >
-                Skip {gameRoom.currentNightAction 
-                  ? `${gameRoom.currentNightAction.charAt(0).toUpperCase()}${gameRoom.currentNightAction.slice(1)}` 
-                  : 'Current'} Timer
+                <span className="flex items-center justify-center">
+                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View Your Role
+                </span>
               </Button>
             </div>
-          )}
-        </div>
-        
-        <div className="text-center">
-          <Button variant="ghost" onClick={() => setShowRoleModal(true)}>
-            View Your Role
-          </Button>
+            
+            {/* Night Sequence Visualization */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+              <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/30">
+                <h3 className="font-bold text-white flex items-center">
+                  <span className="mr-2">🌠</span> Night Sequence
+                </h3>
+              </div>
+              <div className="p-5">
+                <div className="space-y-3">
+                  {['werewolves', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
+                    // Determine if this role has already gone, is current, or is upcoming
+                    const isCurrent = gameRoom.currentNightAction === role;
+                    const hasGone = !gameRoom.currentNightAction 
+                      ? false 
+                      : ['werewolves', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac']
+                          .indexOf(gameRoom.currentNightAction) > index;
+                    
+                    return (
+                      <div 
+                        key={role}
+                        className={`flex items-center p-2 rounded-lg
+                          ${isCurrent ? 'bg-indigo-900/40 border border-indigo-700/50' : ''}
+                          ${hasGone ? 'opacity-60' : ''}
+                        `}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3
+                          ${isCurrent ? 'bg-indigo-700 text-white' : 'bg-gray-800 text-gray-400'}
+                          ${hasGone ? 'bg-gray-900 text-gray-600' : ''}
+                        `}>
+                          {hasGone && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>}
+                          {isCurrent && <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>}
+                          {!hasGone && !isCurrent && index + 1}
+                        </div>
+                        <span className={`
+                          ${isCurrent ? 'text-indigo-300 font-medium' : 'text-gray-400'}
+                          ${hasGone ? 'text-gray-500 line-through' : ''}
+                        `}>
+                          {role.charAt(0).toUpperCase() + role.slice(1)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            
+            {/* Host Controls - Only shown to host */}
+            {isHost && (
+              <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
+                <div className="px-5 py-4 border-b border-purple-800/30">
+                  <h3 className="font-bold text-white flex items-center">
+                    <span className="mr-2">👑</span> Host Controls
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-gray-300 mb-4 text-sm">
+                    As host, you can skip the current role's timer and move immediately 
+                    to the next role or to the day phase.
+                  </p>
+                  <Button 
+                    fullWidth 
+                    onClick={() => {
+                      const currentRole = gameRoom.currentNightAction
+                        ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
+                        : 'current';
+                      
+                      showConfirmation(
+                        `Skip ${currentRole} Timer`,
+                        `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`,
+                        skipCurrentNightAction
+                      );
+                    }}
+                    className="bg-purple-700 hover:bg-purple-600 transition-all transform hover:translate-y-[-2px] shadow-lg"
+                  >
+                    <span className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
+                      </svg>
+                      Skip {gameRoom.currentNightAction 
+                        ? `${gameRoom.currentNightAction.charAt(0).toUpperCase()}${gameRoom.currentNightAction.slice(1)}` 
+                        : 'Current'} Timer
+                    </span>
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Game Tips Box */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30">
+              <div className="px-5 py-4 border-b border-blue-800/30 bg-blue-900/30">
+                <h3 className="text-lg font-bold text-white flex items-center">
+                  <span className="mr-2">💡</span> Night Phase Tips
+                </h3>
+              </div>
+              <div className="p-5">
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-indigo-400 mr-2">•</span>
+                    <span>Each role wakes up in a specific order</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-indigo-400 mr-2">•</span>
+                    <span>Some roles can view or swap cards</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-indigo-400 mr-2">•</span>
+                    <span>Your original role might change during the night</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-indigo-400 mr-2">•</span>
+                    <span>Remember what you learn for the day discussion!</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1420,16 +1597,25 @@ const GamePage: React.FC = () => {
             
             <Button
               onClick={handleNightActionSubmit}
-              disabled={
-                (action === 'seer' && 
-                !(
-                  (seerSelection.type === 'player' && seerSelection.targets.length === 1) || 
-                  (seerSelection.type === 'center' && seerSelection.targets.length === 2)
-                )) ||
-                (action === 'troublemaker' && troublemakerTargets.length !== 2) ||
-                (action === 'robber' && !robberTarget) ||
-                (action === 'drunk' && !drunkTarget)
-              }
+              disabled={(() => {
+                // Determine if the submit button should be disabled based on the current action
+                if (action === 'seer') {
+                  return !(
+                    (seerSelection.type === 'player' && seerSelection.targets.length === 1) || 
+                    (seerSelection.type === 'center' && seerSelection.targets.length === 2)
+                  );
+                }
+                if (action === 'troublemaker') {
+                  return troublemakerTargets.length !== 2;
+                }
+                if (action === 'robber') {
+                  return !robberTarget;
+                }
+                if (action === 'drunk') {
+                  return !drunkTarget;
+                }
+                return false;
+              })()}
             >
               Submit
             </Button>

@@ -5,7 +5,7 @@ import PlayerList from '../components/PlayerList';
 import RoleSelection from '../components/RoleSelection';
 import Modal from '../components/Modal';
 import { Role } from '../types';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Check } from 'lucide-react';
 
 const LobbyPage: React.FC = () => {
   const { gameRoom, currentPlayer, leaveRoom, startGame, setReady, kickPlayer } = useGame();
@@ -101,6 +101,7 @@ const LobbyPage: React.FC = () => {
               isHost={isHost}
               onKick={handleKickPlayer}
               showKickButton={isHost && gameRoom.phase === 'lobby'}
+              showReadyStatus={true}
             />
             
             <div className="bg-gray-800 rounded-lg p-4">
@@ -137,6 +138,22 @@ const LobbyPage: React.FC = () => {
                       className={`h-2 rounded-full ${allPlayersReady ? 'bg-green-500' : 'bg-yellow-500'}`}
                       style={{ width: `${(gameRoom.players.filter(p => p.isReady).length / playerCount) * 100}%` }}
                     ></div>
+                  </div>
+
+                  {/* Add player ready status indicators */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {gameRoom.players.map(player => (
+                      <div 
+                        key={player.id}
+                        className={`px-2 py-1 rounded-full text-xs flex items-center
+                          ${player.isReady 
+                            ? 'bg-green-900/30 text-green-400 border border-green-700' 
+                            : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
+                      >
+                        {player.isReady && <Check size={10} className="mr-1" />}
+                        {player.name}
+                      </div>
+                    ))}
                   </div>
                 </div>
                 

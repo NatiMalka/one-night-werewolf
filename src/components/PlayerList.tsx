@@ -1,7 +1,7 @@
 import React from 'react';
 import { Player } from '../types';
 import Avatar from './Avatar';
-import { UserX } from 'lucide-react';
+import { UserX, Check } from 'lucide-react';
 
 interface PlayerListProps {
   players: Player[];
@@ -14,6 +14,7 @@ interface PlayerListProps {
   isHost?: boolean;
   onKick?: (playerId: string) => void;
   showKickButton?: boolean;
+  showReadyStatus?: boolean;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({
@@ -26,7 +27,8 @@ const PlayerList: React.FC<PlayerListProps> = ({
   className = '',
   isHost = false,
   onKick,
-  showKickButton = false
+  showKickButton = false,
+  showReadyStatus = false
 }) => {
   return (
     <div className={`bg-gray-900 rounded-lg shadow-md overflow-hidden ${className}`}>
@@ -69,6 +71,18 @@ const PlayerList: React.FC<PlayerListProps> = ({
                       <span className="ml-2 text-xs bg-blue-600 text-blue-100 px-1.5 py-0.5 rounded">
                         You
                       </span>
+                    )}
+                    
+                    {showReadyStatus && (
+                      player.isReady ? (
+                        <span className="ml-2 text-xs bg-green-600 text-green-100 px-1.5 py-0.5 rounded-full flex items-center">
+                          <Check size={12} className="mr-1" /> Ready
+                        </span>
+                      ) : (
+                        <span className="ml-2 text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded-full">
+                          Not Ready
+                        </span>
+                      )
                     )}
                   </div>
                   

@@ -871,18 +871,62 @@ const GamePage: React.FC = () => {
       }
       
       case 'drunk': {
-        // Show a message for now
+        // Determine if a center card has been selected
+        const hasSelectedCard = !!drunkTarget;
+        
         actionContent = (
           <div>
             <p className="text-gray-300 mb-4">
               As the Drunk, you may exchange your card with one from the center without looking at it.
+              You won't see your new card until the end of the game.
             </p>
             
-            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-4">
-              <p className="text-yellow-400">
-                The Drunk role action will be implemented in a future update.
-              </p>
-            </div>
+            {!hasSelectedCard ? (
+              <div>
+                <h4 className="font-semibold text-white mb-2">Select a center card to swap with:</h4>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  {gameRoom.centerCards.map((card, index) => (
+                    <div 
+                      key={card.id}
+                      className={`flex flex-col items-center p-3 rounded-lg cursor-pointer transition-colors
+                        ${drunkTarget === card.id ? 'bg-indigo-900/50 border border-indigo-600' : 'bg-gray-800 hover:bg-gray-700 border border-gray-700'}`}
+                      onClick={() => setDrunkTarget(card.id)}
+                    >
+                      <Card 
+                        role="unknown" 
+                        isRevealed={false}
+                        size="md"
+                      />
+                      <p className="mt-2 text-center font-medium text-gray-300">Center {index + 1}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-yellow-400 text-sm mt-2">
+                  Note: You won't see what card you're getting. You'll still play as the Drunk for this game,
+                  but your actual role at the end will be whatever card you select.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-indigo-900/30 border border-indigo-700 rounded-lg p-4 mb-4">
+                <p className="text-indigo-300 font-semibold mb-2">
+                  You've selected a center card to swap with!
+                </p>
+                <p className="text-gray-300">
+                  Your card will be swapped with the selected center card. Remember that you won't
+                  see what your new role is, and for game purposes, you're still considered to be the Drunk.
+                </p>
+                <div className="mt-3">
+                  <Button 
+                    variant="secondary"
+                    size="sm"
+                    fullWidth 
+                    onClick={() => setDrunkTarget('')}
+                  >
+                    Change Selection
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         );
         break;

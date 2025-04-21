@@ -168,6 +168,38 @@ class FirebaseGameService {
         // Get all the selected roles to determine possible actions
         const selectedRoles = roomData.selectedRoles || [];
         
+        // Process action effects if needed
+        const roleUpdates: Record<string, unknown> = {};
+        
+        // Handle specific action effects
+        if (action === 'drunk' && actionData.centerCardId) {
+          const drunkPlayerId = Object.keys(roomData.players).find(
+            id => roomData.players[id].originalRole === 'drunk'
+          );
+          
+          if (drunkPlayerId && actionData.centerCardId) {
+            const centerCardId = actionData.centerCardId as string;
+            const centerCardIndex = roomData.centerCards.findIndex(
+              (card: {id: string}) => card.id === centerCardId
+            );
+            
+            if (centerCardIndex !== -1) {
+              const drunkCurrentRole = roomData.players[drunkPlayerId].currentRole;
+              const centerCardRole = roomData.centerCards[centerCardIndex].role;
+              
+              // Update the center card with the drunk's role
+              roleUpdates[`centerCards/${centerCardIndex}/role`] = drunkCurrentRole;
+              
+              // Update the drunk's current role to the center card's role
+              roleUpdates[`players/${drunkPlayerId}/currentRole`] = centerCardRole;
+              
+              console.log("Drunk swapped with center card:", centerCardId, 
+                "drunk's new role:", centerCardRole,
+                "center card's new role:", drunkCurrentRole);
+            }
+          }
+        }
+        
         // Determine potential night actions based on selected roles
         const potentialActions: NightAction[] = [];
         
@@ -202,7 +234,8 @@ class FirebaseGameService {
         // Updates to apply
         const updates: Record<string, unknown> = {
           nightActionsCompleted: completedActions,
-          antiCache: this.getAntiCacheParam()
+          antiCache: this.getAntiCacheParam(),
+          ...roleUpdates
         };
         
         // If there's another action, set it and reset timer

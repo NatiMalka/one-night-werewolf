@@ -10,6 +10,87 @@ import { Role } from '../types';
 import { roleData } from '../utils/gameUtils';
 import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
 
+// Add styles for the vote animations
+const voteAnimationStyles = `
+@keyframes floatUp {
+  0% { transform: translateY(100%); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-500%); opacity: 0; }
+}
+
+@keyframes floatUpSlow {
+  0% { transform: translateY(100%); opacity: 0; }
+  15% { opacity: 0.5; }
+  85% { opacity: 0.3; }
+  100% { transform: translateY(-400%); opacity: 0; }
+}
+
+.vote-particles-1::before,
+.vote-particles-1::after,
+.vote-particles-2::before,
+.vote-particles-2::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.7) 0%, rgba(79, 70, 229, 0.3) 70%);
+  box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+  animation: floatUp 15s infinite linear;
+}
+
+.vote-particles-1::before { left: 10%; animation-delay: 0s; }
+.vote-particles-1::after { left: 30%; animation-delay: 3s; }
+.vote-particles-2::before { left: 60%; animation-delay: 6s; }
+.vote-particles-2::after { left: 80%; animation-delay: 9s; }
+
+.vote-particles-1::before,
+.vote-particles-1::after,
+.vote-particles-2::before,
+.vote-particles-2::after {
+  filter: blur(1px);
+}
+
+.vote-particles-1::before { width: 12px; height: 12px; }
+.vote-particles-1::after { width: 8px; height: 8px; animation-duration: 18s; }
+.vote-particles-2::before { width: 10px; height: 10px; animation-duration: 22s; }
+.vote-particles-2::after { width: 14px; height: 14px; animation-duration: 25s; }
+
+/* Additional particles */
+.vote-particles-1::before { box-shadow: 0 0 15px rgba(147, 51, 234, 0.7); }
+.vote-particles-2::after { box-shadow: 0 0 18px rgba(79, 70, 229, 0.6); }
+
+/* Add more particles */
+.vote-particles-1, .vote-particles-2 {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.vote-particles-1::before { left: 15%; animation-delay: 1s; }
+.vote-particles-1::after { left: 35%; animation-delay: 4s; }
+.vote-particles-2::before { left: 55%; animation-delay: 7s; }
+.vote-particles-2::after { left: 75%; animation-delay: 10s; }
+
+/* Create pseudo elements for more particles */
+.vote-particles-1 span,
+.vote-particles-2 span {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.7) 0%, rgba(139, 92, 246, 0.3) 70%);
+  box-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
+  animation: floatUpSlow 20s infinite linear;
+}
+
+.vote-particles-1 span:nth-child(1) { left: 22%; animation-delay: 2s; width: 7px; height: 7px; }
+.vote-particles-1 span:nth-child(2) { left: 45%; animation-delay: 5s; width: 9px; height: 9px; }
+.vote-particles-2 span:nth-child(1) { left: 67%; animation-delay: 8s; width: 11px; height: 11px; }
+.vote-particles-2 span:nth-child(2) { left: 89%; animation-delay: 11s; width: 6px; height: 6px; }
+`;
+
 // Add a Toast notification component
 const Toast = ({ message, onClose }: { message: string, onClose: () => void }) => {
   useEffect(() => {
@@ -129,6 +210,30 @@ const GamePage: React.FC = () => {
       setShowRoleModal(true);
     }
   }, [gameRoom?.phase, currentPlayer?.originalRole]);
+  
+  // Inject CSS styles for vote animations when component mounts
+  useEffect(() => {
+    if (!gameRoom || !currentPlayer) return;
+    
+    // Create style element
+    const styleEl = document.createElement('style');
+    styleEl.type = 'text/css';
+    styleEl.id = 'vote-animation-styles';
+    styleEl.innerHTML = voteAnimationStyles;
+    
+    // Only add the styles if they don't already exist
+    if (!document.getElementById('vote-animation-styles')) {
+      document.head.appendChild(styleEl);
+    }
+    
+    return () => {
+      // Clean up style element when component unmounts
+      const existingStyle = document.getElementById('vote-animation-styles');
+      if (existingStyle) {
+        document.head.removeChild(existingStyle);
+      }
+    };
+  }, []);
   
   if (!gameRoom || !currentPlayer) {
     return null;
@@ -654,81 +759,281 @@ const GamePage: React.FC = () => {
     };
     
     return (
-      <div className="container mx-auto px-4 max-w-5xl py-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Voting Phase</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 bg-gray-900 rounded-lg p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-white">
-                Vote for the Werewolf
-              </h3>
-              
-              <div className="bg-gray-800 px-3 py-1 rounded text-gray-300 text-sm">
-                {playersVoted} of {totalPlayers} voted
-              </div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Header with voting animation background */}
+        <div className="relative mb-8 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 rounded-xl overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-cover bg-center opacity-20" 
+               style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+          
+          {/* Animated vote particles */}
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="vote-particles-1">
+              <span></span>
+              <span></span>
             </div>
-            
-            <p className="text-gray-400 mb-6">
-              {hasVoted 
-                ? "You've cast your vote. Wait for other players to vote."
-                : "Select a player you think is a werewolf. Choose carefully!"}
-            </p>
-            
-            <PlayerList 
-              players={gameRoom.players}
-              currentPlayerId={currentPlayer.id}
-              votingEnabled={!hasVoted}
-              onVote={handleVote}
-              voteCounts={playerVotes}
-            />
-            
-            {playerVotes && Object.keys(playerVotes).length > 0 && (
-              <div className="mt-6 bg-gray-800 p-4 rounded-lg">
-                <h4 className="font-semibold text-white mb-3">Current Votes</h4>
-                <ul className="space-y-2">
-                  {gameRoom.players.filter(p => p.votedFor).map(player => {
-                    const votedForPlayer = gameRoom.players.find(p => p.id === player.votedFor);
-                    return (
-                      <li key={player.id} className="flex items-center text-sm">
-                        <span className="text-indigo-400 font-medium">{player.name}</span>
-                        <span className="text-gray-500 mx-2">voted for</span>
-                        <span className="text-red-400 font-medium">{votedForPlayer?.name || 'Unknown'}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+            <div className="vote-particles-2">
+              <span></span>
+              <span></span>
+            </div>
           </div>
           
-          <div className="flex flex-col gap-4">
-            <div className="bg-gray-900 rounded-lg p-6">
-              <h3 className="font-semibold text-white mb-3">Game Info</h3>
-              
-              <div className="text-sm text-gray-400 space-y-2">
-                <p>• Village Team wins if a werewolf is eliminated</p>
-                <p>• Werewolf Team wins if no werewolf is eliminated</p>
-                <p>• The Tanner wins if they are eliminated</p>
-                <p>• If the Hunter is eliminated, their target is also eliminated</p>
+          {/* Content */}
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-center p-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white flex items-center">
+                <span className="mr-3">🗳️</span>
+                Voting Phase
+              </h2>
+              <p className="text-purple-200 mt-1">Select a player you think is a werewolf</p>
+            </div>
+            
+            <div className="mt-4 md:mt-0 flex items-center">
+              {/* Vote progress indicator */}
+              <div className="bg-gray-900/70 backdrop-blur-sm px-6 py-3 rounded-lg shadow-inner border border-purple-700/30 flex items-center">
+                <div className="mr-3">
+                  <div className="text-sm text-gray-400 mb-1">Votes Cast</div>
+                  <div className="relative w-full bg-gray-700 rounded-full h-2.5">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${(playersVoted / totalPlayers) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-white">{playersVoted}/{totalPlayers}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Vote Selection Panel - Takes up more space */}
+          <div className="md:col-span-2">
+            <div className="bg-gradient-to-br from-gray-900/90 to-indigo-900/80 rounded-xl shadow-2xl overflow-hidden border border-indigo-900/30">
+              <div className="px-6 py-4 border-b border-indigo-800/40 bg-gradient-to-r from-indigo-900/40 to-purple-900/40 flex justify-between items-center">
+                <h3 className="text-xl font-bold text-white flex items-center">
+                  <span className="mr-2">🐺</span> Vote for the Werewolf
+                </h3>
+                
+                {hasVoted && (
+                  <div className="bg-green-900/60 text-green-300 text-sm px-3 py-1 rounded-full border border-green-700/40">
+                    <span className="flex items-center">
+                      <CheckCircle size={14} className="mr-1" /> Vote Cast
+                    </span>
+                  </div>
+                )}
               </div>
               
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <p className="text-sm text-yellow-300 mb-2">When everyone has voted:</p>
-                <p className="text-xs text-gray-400">
-                  The player(s) with the most votes will be eliminated.
-                  The winners will be determined based on who was eliminated.
+              <div className="p-6">
+                <p className="text-gray-300 mb-6">
+                  {hasVoted 
+                    ? "You've cast your vote. Wait for other players to vote."
+                    : "Select a player you think is a werewolf. Choose carefully!"}
                 </p>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                  {gameRoom.players.map(player => {
+                    // Skip current player as they can't vote for themselves
+                    if (player.id === currentPlayer.id) return null;
+                    
+                    const isVotedFor = currentPlayer.votedFor === player.id;
+                    const voteCount = playerVotes ? playerVotes[player.id] || 0 : 0;
+                    
+                    return (
+                      <div 
+                        key={player.id}
+                        className={`relative group rounded-lg overflow-hidden transition-all duration-300 transform ${
+                          hasVoted ? 'cursor-default' : 'cursor-pointer hover:scale-103 hover:-translate-y-1'
+                        } ${
+                          isVotedFor 
+                            ? 'bg-gradient-to-br from-purple-900 to-indigo-900 border-2 border-purple-500/70 shadow-lg shadow-purple-500/20' 
+                            : 'bg-gray-800/80 border border-gray-700/50 hover:border-indigo-700/70'
+                        }`}
+                        onClick={() => !hasVoted && handleVote(player.id)}
+                      >
+                        {/* Glowing effect on hover */}
+                        <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 ${hasVoted ? 'hidden' : ''}`}></div>
+                        
+                        <div className="relative p-4 flex items-center">
+                          <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mr-3 border-2 border-gray-600 overflow-hidden">
+                            <div className="text-xl font-bold text-white">{player.name.charAt(0).toUpperCase()}</div>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="text-lg font-semibold text-white mb-1">{player.name}</div>
+                            
+                            {gameRoom.phase === 'voting' && voteCount > 0 && (
+                              <div className="flex items-center">
+                                <div className="text-sm bg-red-900/40 text-red-300 px-2 py-0.5 rounded-full">
+                                  {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {!hasVoted ? (
+                            <div className="w-8 h-8 rounded-full bg-gray-700/70 flex items-center justify-center border border-gray-600/50 group-hover:bg-indigo-800 group-hover:border-indigo-600 transition-colors">
+                              <CheckCircle size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                            </div>
+                          ) : isVotedFor ? (
+                            <div className="w-8 h-8 rounded-full bg-green-900/70 flex items-center justify-center border border-green-600/70">
+                              <CheckCircle size={16} className="text-green-300" />
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {playerVotes && Object.keys(playerVotes).length > 0 && (
+                  <div className="mt-8 bg-gray-800/70 backdrop-blur rounded-lg p-5 border border-indigo-900/30">
+                    <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                      <span className="mr-2">📊</span> Live Vote Results
+                    </h4>
+                    
+                    <div className="space-y-4">
+                      {gameRoom.players.map(player => {
+                        const voteCount = playerVotes[player.id] || 0;
+                        const percentage = totalPlayers > 0 ? (voteCount / totalPlayers) * 100 : 0;
+                        
+                        return (
+                          <div key={player.id} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-white font-medium">{player.name}</span>
+                              <span className="text-gray-400">{voteCount} {voteCount === 1 ? 'vote' : 'votes'}</span>
+                            </div>
+                            <div className="relative w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-500 ease-out"
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Game Info & Controls Column */}
+          <div className="space-y-6">
+            {/* Vote Status Panel */}
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+              <div className="bg-gradient-to-r from-indigo-900/40 to-indigo-800/30 px-5 py-4 border-b border-indigo-800/30">
+                <h3 className="font-bold text-white flex items-center">
+                  <span className="mr-2">⏱️</span> Voting Status
+                </h3>
+              </div>
+              
+              <div className="p-5">
+                <div className="flex flex-col gap-1">
+                  {gameRoom.players.map(player => {
+                    const hasPlayerVoted = !!player.votedFor;
+                    
+                    return (
+                      <div 
+                        key={player.id} 
+                        className={`flex items-center p-2 rounded-lg ${
+                          hasPlayerVoted ? 'bg-green-900/20' : 'bg-gray-800/50'
+                        }`}
+                      >
+                        <div className={`w-3 h-3 rounded-full mr-3 ${
+                          hasPlayerVoted ? 'bg-green-500' : 'bg-gray-600'
+                        }`}></div>
+                        
+                        <span className="text-gray-300 flex-1">{player.name}</span>
+                        
+                        <span className={`text-sm ${
+                          hasPlayerVoted ? 'text-green-400' : 'text-gray-500'
+                        }`}>
+                          {hasPlayerVoted ? 'Voted' : 'Waiting...'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <div className="mt-5 pt-4 border-t border-gray-700">
+                  <p className="text-yellow-300 text-sm">
+                    When everyone has voted:
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    The player(s) with the most votes will be eliminated.
+                  </p>
+                </div>
               </div>
             </div>
             
-            <div className="bg-gray-900 rounded-lg p-4">
+            {/* Game Info Box */}
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
+              <div className="bg-gradient-to-r from-purple-900/40 to-indigo-800/30 px-5 py-4 border-b border-purple-800/30">
+                <h3 className="font-bold text-white flex items-center">
+                  <span className="mr-2">ℹ️</span> Game Info
+                </h3>
+              </div>
+              
+              <div className="p-5 space-y-3">
+                <div className="flex gap-3 items-start text-sm">
+                  <div className="w-8 h-8 flex-shrink-0 rounded-full bg-blue-900/40 border border-blue-700/40 flex items-center justify-center text-blue-400">
+                    🏠
+                  </div>
+                  <div>
+                    <p className="text-blue-400 font-medium">Village Team</p>
+                    <p className="text-gray-400">Wins if a werewolf is eliminated</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 items-start text-sm">
+                  <div className="w-8 h-8 flex-shrink-0 rounded-full bg-red-900/40 border border-red-700/40 flex items-center justify-center text-red-400">
+                    🐺
+                  </div>
+                  <div>
+                    <p className="text-red-400 font-medium">Werewolf Team</p>
+                    <p className="text-gray-400">Wins if no werewolf is eliminated</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 items-start text-sm">
+                  <div className="w-8 h-8 flex-shrink-0 rounded-full bg-amber-900/40 border border-amber-700/40 flex items-center justify-center text-amber-400">
+                    ⚰️
+                  </div>
+                  <div>
+                    <p className="text-amber-400 font-medium">The Tanner</p>
+                    <p className="text-gray-400">Wins if they are eliminated</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 items-start text-sm">
+                  <div className="w-8 h-8 flex-shrink-0 rounded-full bg-green-900/40 border border-green-700/40 flex items-center justify-center text-green-400">
+                    🏹
+                  </div>
+                  <div>
+                    <p className="text-green-400 font-medium">The Hunter</p>
+                    <p className="text-gray-400">If eliminated, their target is also eliminated</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* View Role Button */}
+            <div className="bg-gray-900/90 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 p-5">
               <Button 
                 variant="ghost" 
                 fullWidth 
                 onClick={() => setShowRoleModal(true)}
+                className="bg-indigo-900/50 hover:bg-indigo-800/70 text-white border border-indigo-700/50 shadow-inner py-3"
               >
-                View Your Role
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View Your Role
+                </span>
               </Button>
             </div>
           </div>

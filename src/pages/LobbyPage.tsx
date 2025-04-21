@@ -75,141 +75,338 @@ const LobbyPage: React.FC = () => {
   };
   
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Game Lobby</h1>
-          <p className="text-gray-400">
-            Room Code: <span className="font-mono bg-gray-800 px-2 py-1 rounded text-yellow-400">{gameRoom.code}</span>
-          </p>
-        </div>
-        
-        <div className="mt-4 md:mt-0">
-          <Button variant="danger" onClick={leaveRoom}>
-            Leave Game
-          </Button>
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {/* Header with stylized background */}
+      <div className="relative mb-8 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 rounded-xl overflow-hidden shadow-2xl">
+        <div className="absolute inset-0 bg-cover bg-center opacity-10" 
+             style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between p-6">
+          <div>
+            <h1 className="text-4xl font-bold text-white mb-2 flex items-center">
+              <span className="mr-3">🐺</span> Game Lobby
+            </h1>
+            <div className="bg-gray-900/60 backdrop-blur-sm px-3 py-2 rounded-lg inline-flex items-center">
+              <span className="text-gray-400 mr-2">Room Code:</span>
+              <span className="font-mono text-yellow-400 font-bold tracking-wider">{gameRoom.code}</span>
+              <button 
+                className="ml-3 text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-800"
+                onClick={() => navigator.clipboard.writeText(gameRoom.code)}
+                title="Copy code"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div className="mt-4 md:mt-0">
+            <Button 
+              variant="danger" 
+              onClick={leaveRoom}
+              className="px-4 py-2 flex items-center shadow-lg hover:shadow-xl transition-all transform hover:translate-y-[-2px]"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Leave Game
+            </Button>
+          </div>
         </div>
       </div>
       
-      <div className="bg-gray-900 rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex flex-col md:flex-row items-start gap-6">
-          <div className="w-full md:w-1/2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Left Column - Players and Info */}
+        <div className="space-y-6">
+          {/* Players Panel */}
+          <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
             <PlayerList 
               players={gameRoom.players} 
               currentPlayerId={currentPlayer.id}
-              className="mb-6"
               isHost={isHost}
               onKick={handleKickPlayer}
               showKickButton={isHost && gameRoom.phase === 'lobby'}
               showReadyStatus={true}
             />
-            
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-white mb-2">Game Information</h3>
-              <ul className="text-gray-300 space-y-2">
-                <li>• You need <span className="text-yellow-400">3-10 players</span> to play</li>
-                <li>• Each player will be assigned a secret role</li>
-                <li>• The game has one night phase and one day phase</li>
-                <li>• Discussion happens during the day phase</li>
-                <li>• Everyone votes at the end of the day</li>
-                <li>• The village wins if they eliminate a werewolf</li>
-                <li>• The werewolves win if no werewolf is eliminated</li>
+          </div>
+          
+          {/* Game Info Panel */}
+          <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+            <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/30">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <span className="mr-2">📜</span> Game Rules
+              </h3>
+            </div>
+            <div className="p-5">
+              <ul className="text-gray-300 space-y-3">
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>You need <span className="text-yellow-400 font-medium">3-10 players</span> to play</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>Each player will be assigned a <span className="text-blue-400 font-medium">secret role</span></span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>The game has one <span className="text-purple-400 font-medium">night phase</span> and one <span className="text-yellow-400 font-medium">day phase</span></span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>Discussion happens during the day phase</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>Everyone votes at the end of the day</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>The <span className="text-blue-400 font-medium">village wins</span> if they eliminate a werewolf</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2 mt-1">•</span>
+                  <span>The <span className="text-red-400 font-medium">werewolves win</span> if no werewolf is eliminated</span>
+                </li>
               </ul>
             </div>
           </div>
-          
-          <div className="w-full md:w-1/2 bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Game Setup</h2>
-            
-            {isHost ? (
-              <div>
-                <p className="text-gray-300 mb-4">
-                  You are the host. Wait for all players to ready up, then start the game.
-                </p>
-                
-                <div className="mb-6">
-                  <div className="flex justify-between text-sm text-gray-400 mb-1">
-                    <span>Players Ready: {gameRoom.players.filter(p => p.isReady).length} / {playerCount}</span>
-                    <span>Minimum: 3 players</span>
+        </div>
+        
+        {/* Right Column - Game Setup */}
+        <div className="space-y-6">
+          {/* Game Setup Panel */}
+          <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
+            <div className="px-5 py-4 border-b border-purple-800/30">
+              <h3 className="text-xl font-bold text-white flex items-center">
+                <span className="mr-2">🎮</span> Game Setup
+              </h3>
+            </div>
+            <div className="p-5">
+              {isHost ? (
+                <div className="space-y-5">
+                  <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 border border-purple-800/30">
+                    <p className="text-blue-300 font-medium mb-2 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Host Controls
+                    </p>
+                    <p className="text-gray-300">
+                      You are the host. Wait for all players to ready up, then start the game.
+                    </p>
                   </div>
                   
-                  <div className="w-full bg-gray-900 rounded-full h-2">
-                    <div 
-                      className={`h-2 rounded-full ${allPlayersReady ? 'bg-green-500' : 'bg-yellow-500'}`}
-                      style={{ width: `${(gameRoom.players.filter(p => p.isReady).length / playerCount) * 100}%` }}
-                    ></div>
-                  </div>
-
-                  {/* Add player ready status indicators */}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {gameRoom.players.map(player => (
+                  <div>
+                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                      <span className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        Players Ready: {gameRoom.players.filter(p => p.isReady).length} / {playerCount}
+                      </span>
+                      <span className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Minimum: 3 players
+                      </span>
+                    </div>
+                    
+                    <div className="w-full bg-gray-900 rounded-full h-3 mb-4 overflow-hidden">
                       <div 
-                        key={player.id}
-                        className={`px-2 py-1 rounded-full text-xs flex items-center
-                          ${player.isReady 
-                            ? 'bg-green-900/30 text-green-400 border border-green-700' 
-                            : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
-                      >
-                        {player.isReady && <Check size={10} className="mr-1" />}
-                        {player.name}
+                        className={`h-full rounded-full transition-all duration-500 ${allPlayersReady ? 'bg-gradient-to-r from-green-500 to-green-400' : 'bg-gradient-to-r from-yellow-500 to-amber-400'}`}
+                        style={{ width: `${(gameRoom.players.filter(p => p.isReady).length / playerCount) * 100}%` }}
+                      ></div>
+                    </div>
+
+                    <div className="mb-6">
+                      <p className="text-sm text-gray-400 mb-2">Player Status:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {gameRoom.players.map(player => (
+                          <div 
+                            key={player.id}
+                            className={`px-3 py-1.5 rounded-full text-sm flex items-center transition-all duration-300
+                              ${player.isReady 
+                                ? 'bg-green-900/30 text-green-400 border border-green-700 shadow-inner shadow-green-900/30' 
+                                : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
+                          >
+                            {player.isReady && <Check size={14} className="mr-1.5" />}
+                            {player.name}
+                            {player.id === currentPlayer.id && (
+                              <span className="ml-1.5 text-xs bg-blue-900/70 text-blue-300 px-1.5 py-0.5 rounded-full">
+                                You
+                              </span>
+                            )}
+                            {player.isHost && (
+                              <span className="ml-1.5 text-xs bg-yellow-900/70 text-yellow-300 px-1.5 py-0.5 rounded-full">
+                                Host
+                              </span>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                  
+                  {/* Ready button for host */}
+                  <div className="space-y-4">
+                    <Button
+                      fullWidth
+                      variant={currentPlayer.isReady ? 'success' : 'primary'}
+                      onClick={handleReadyToggle}
+                      className={`py-3 text-lg transition-all duration-300 ${currentPlayer.isReady ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    >
+                      <span className="flex items-center justify-center">
+                        {currentPlayer.isReady ? (
+                          <>
+                            <Check size={20} className="mr-2" />
+                            Ready to Play
+                          </>
+                        ) : (
+                          <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Mark as Ready
+                          </>
+                        )}
+                      </span>
+                    </Button>
+                    
+                    <Button
+                      fullWidth
+                      disabled={!canStartGame}
+                      onClick={handleStartGame}
+                      className={`py-3 text-lg transition-all transform ${canStartGame ? 'hover:translate-y-[-2px] shadow-lg hover:shadow-xl' : 'opacity-70 cursor-not-allowed'}`}
+                    >
+                      <span className="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Start Game
+                      </span>
+                    </Button>
+                    
+                    {!canStartGame && playerCount < 3 && (
+                      <div className="bg-red-900/30 border border-red-700/30 rounded-lg p-3 text-center">
+                        <p className="text-red-400 text-sm flex items-center justify-center">
+                          <AlertTriangle size={16} className="mr-2" />
+                          Need at least 3 players to start
+                        </p>
+                      </div>
+                    )}
+                    
+                    {!canStartGame && !allPlayersReady && playerCount >= 3 && (
+                      <div className="bg-yellow-900/30 border border-yellow-700/30 rounded-lg p-3 text-center">
+                        <p className="text-yellow-400 text-sm flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Waiting for all players to ready up
+                        </p>
+                      </div>
+                    )}
+                    
+                    {!currentPlayer.isReady && (
+                      <div className="bg-yellow-900/30 border border-yellow-700/30 rounded-lg p-3 text-center">
+                        <p className="text-yellow-400 text-sm flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          You need to mark yourself as ready
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                {/* Ready button for host */}
-                <div className="mb-4">
+              ) : (
+                <div className="space-y-5">
+                  <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 border border-purple-800/30">
+                    <p className="text-purple-300 mb-2 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Waiting for Host
+                    </p>
+                    <p className="text-gray-300">
+                      Wait for the host to start the game. You can mark yourself as ready when you're prepared to play.
+                    </p>
+                  </div>
+                  
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-400 mb-2">Other Players:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {gameRoom.players.filter(p => p.id !== currentPlayer.id).map(player => (
+                        <div 
+                          key={player.id}
+                          className={`px-3 py-1.5 rounded-full text-sm flex items-center
+                            ${player.isReady 
+                              ? 'bg-green-900/30 text-green-400 border border-green-700' 
+                              : 'bg-gray-800 text-gray-400 border border-gray-700'}`}
+                        >
+                          {player.isReady && <Check size={14} className="mr-1.5" />}
+                          {player.name}
+                          {player.isHost && (
+                            <span className="ml-1.5 text-xs bg-yellow-900/70 text-yellow-300 px-1.5 py-0.5 rounded-full">
+                              Host
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
                   <Button
                     fullWidth
                     variant={currentPlayer.isReady ? 'success' : 'primary'}
                     onClick={handleReadyToggle}
-                    className="mb-4"
+                    className={`py-3 text-lg transition-all duration-300 ${currentPlayer.isReady ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
                   >
-                    {currentPlayer.isReady ? 'Ready ✓' : 'Mark as Ready'}
+                    <span className="flex items-center justify-center">
+                      {currentPlayer.isReady ? (
+                        <>
+                          <Check size={20} className="mr-2" />
+                          Ready to Play
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Mark as Ready
+                        </>
+                      )}
+                    </span>
                   </Button>
+                  
+                  {currentPlayer.isReady && (
+                    <div className="bg-green-900/30 border border-green-700/30 rounded-lg p-3 text-center">
+                      <p className="text-green-400 text-sm flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Waiting for the host to start the game
+                      </p>
+                    </div>
+                  )}
                 </div>
-                
-                <Button
-                  fullWidth
-                  disabled={!canStartGame}
-                  onClick={handleStartGame}
-                >
-                  Start Game
-                </Button>
-                
-                {!canStartGame && playerCount < 3 && (
-                  <p className="text-red-400 mt-2 text-sm">
-                    Need at least 3 players to start
-                  </p>
-                )}
-                
-                {!canStartGame && !allPlayersReady && playerCount >= 3 && (
-                  <p className="text-yellow-400 mt-2 text-sm">
-                    Waiting for all players to ready up
-                  </p>
-                )}
-                
-                {!currentPlayer.isReady && (
-                  <p className="text-yellow-400 mt-2 text-sm">
-                    You need to mark yourself as ready
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div>
-                <p className="text-gray-300 mb-4">
-                  Wait for the host to start the game. You can mark yourself as ready when you're prepared to play.
-                </p>
-                
-                <Button
-                  fullWidth
-                  variant={currentPlayer.isReady ? 'success' : 'primary'}
-                  onClick={handleReadyToggle}
-                >
-                  {currentPlayer.isReady ? 'Ready ✓' : 'Mark as Ready'}
-                </Button>
-              </div>
-            )}
+              )}
+            </div>
+          </div>
+          
+          {/* Game Tip Panel */}
+          <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30">
+            <div className="px-5 py-4 border-b border-blue-800/30 bg-blue-900/30">
+              <h3 className="text-lg font-bold text-white flex items-center">
+                <span className="mr-2">💡</span> Quick Tip
+              </h3>
+            </div>
+            <div className="p-5">
+              <p className="text-gray-300">
+                One Night Werewolf is all about deception and deduction. Listen carefully to what other players claim about their roles, as roles might change during the night phase!
+              </p>
+            </div>
           </div>
         </div>
       </div>

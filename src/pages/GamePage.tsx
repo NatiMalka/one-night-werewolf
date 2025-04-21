@@ -718,10 +718,16 @@ const GamePage: React.FC = () => {
         <div className="mt-10 flex justify-center gap-6">
           <Button 
             size="lg" 
-            onClick={playAgain}
+            onClick={() => {
+              if (currentPlayer.isHost) {
+                playAgain();
+              } else {
+                setToast("Waiting for the host to start a new game. Only the host can restart the game.");
+              }
+            }}
             className="px-8 py-3 text-lg"
           >
-            Play Again
+            {currentPlayer.isHost ? "Play Again" : "Ready for Next Game"}
           </Button>
           
           <Button 

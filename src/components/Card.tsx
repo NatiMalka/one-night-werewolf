@@ -105,7 +105,7 @@ const Card: React.FC<CardProps> = ({
             <img 
               src="/images/werewolf.jpg" 
               alt="Werewolf" 
-              className="absolute w-full h-full object-cover opacity-95"
+              className="absolute w-full h-full object-contain opacity-95"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-red-950/30 to-transparent" />
           </div>

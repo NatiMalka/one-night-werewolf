@@ -674,7 +674,7 @@ const GamePage: React.FC = () => {
         <div className="flex flex-col md:flex-row items-start gap-8 py-4">
           {/* Card section - much larger card filling the left side */}
           <div className="flex flex-col items-center md:w-1/3 my-4">
-            <div className="h-[450px] w-[300px] flex items-center justify-center mx-auto">
+            <div className="h-[500px] w-[350px] flex items-center justify-center mx-auto">
               <Card 
                 role={roleToShow}
                 isRevealed={true}

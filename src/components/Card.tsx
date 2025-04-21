@@ -1,5 +1,6 @@
 import React from 'react';
-import { Role, roleData } from '../utils/gameUtils';
+import { Role } from '../types';
+import { roleData } from '../utils/gameUtils';
 
 interface CardProps {
   role?: Role;
@@ -22,10 +23,11 @@ const Card: React.FC<CardProps> = ({
   isCenterCard = false,
   label
 }) => {
+  // Default sizes, but these can be overridden by className
   const sizeClasses = {
     sm: 'w-16 h-24',
     md: 'w-28 h-40',
-    lg: 'w-36 h-52'
+    lg: 'w-full h-full max-w-xs'
   };
 
   const getTeamColor = (role?: Role) => {
@@ -39,10 +41,31 @@ const Card: React.FC<CardProps> = ({
     
     return 'bg-gray-800';
   };
+  
+  const getTeamGradient = (role?: Role) => {
+    if (!role) return 'bg-gradient-to-b from-gray-800 to-gray-900';
+    
+    const team = roleData[role].team;
+    
+    if (team === 'werewolf') return 'bg-gradient-to-b from-red-800 to-red-950';
+    if (team === 'village') return 'bg-gradient-to-b from-blue-800 to-blue-950';
+    if (team === 'tanner') return 'bg-gradient-to-b from-amber-800 to-amber-950';
+    
+    return 'bg-gradient-to-b from-gray-800 to-gray-900';
+  };
 
   const handleClick = () => {
     if (onClick) onClick();
   };
+  
+  // Determine if we should show the werewolf image
+  const showWerewolfImage = isRevealed && role === 'werewolf';
+  
+  // Special treatments for different roles
+  const hasSpecialBackground = isRevealed && role === 'werewolf';
+  
+  // Determine if this is a large card (either by size prop or className containing scale)
+  const isLargeCard = size === 'lg';
 
   return (
     <div className={`relative ${className}`}>
@@ -59,46 +82,105 @@ const Card: React.FC<CardProps> = ({
           transition-all duration-300
           ${isSelected ? 'ring-4 ring-yellow-400 transform scale-105' : ''}
           ${onClick ? 'cursor-pointer hover:shadow-xl hover:transform hover:scale-105' : ''}
-          ${isRevealed ? getTeamColor(role) : 'bg-indigo-900'}
+          ${isRevealed ? getTeamGradient(role) : 'bg-gradient-to-b from-indigo-800 to-indigo-950'}
+          relative
         `}
         onClick={handleClick}
+        style={hasSpecialBackground ? { 
+          boxShadow: '0 0 30px rgba(220, 38, 38, 0.6), 0 0 60px rgba(220, 38, 38, 0.3)', 
+          border: '1px solid rgba(220, 38, 38, 0.5)' 
+        } : {}}
       >
-        <div className="h-full w-full flex flex-col items-center justify-center p-2">
+        {/* Card Back Pattern */}
+        {!isRevealed && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-20">
+            <div className="w-3/4 h-3/4 border-4 border-indigo-700 rounded-full" />
+            <div className="absolute w-1/2 h-1/2 border-4 border-indigo-700 rounded-full" />
+          </div>
+        )}
+        
+        {/* Werewolf Image */}
+        {showWerewolfImage && (
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <img 
+              src="/images/werewolf.jpg" 
+              alt="Werewolf" 
+              className="absolute w-full h-full object-cover opacity-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-red-950 via-red-950/30 to-transparent" />
+          </div>
+        )}
+
+        <div className="h-full w-full flex flex-col justify-between p-2 relative z-10">
           {isRevealed && role ? (
             <>
-              <div className="text-center">
-                <h3 className="font-bold text-white">
-                  {roleData[role].name}
-                </h3>
+              {/* Top section with role icon/symbol */}
+              <div className="flex justify-between items-start">
+                <div className={`${isLargeCard ? 'w-12 h-12 text-xl' : 'w-6 h-6 text-xs'} rounded-full ${getTeamColor(role)} flex items-center justify-center text-white font-bold border-2 border-white/50 shadow-lg`}>
+                  {role === 'werewolf' ? 'W' : 
+                   role === 'seer' ? 'S' : 
+                   role === 'robber' ? 'R' : 
+                   role === 'troublemaker' ? 'T' : 
+                   role === 'drunk' ? 'D' : 
+                   role === 'insomniac' ? 'I' : 
+                   role === 'hunter' ? 'H' : 
+                   role === 'mason' ? 'M' : 
+                   role === 'tanner' ? 'T' : 'V'}
+                </div>
+                
                 {size !== 'sm' && (
-                  <p className="text-xs mt-1 text-gray-200">
-                    {roleData[role].team === 'werewolf' 
-                      ? 'Werewolf Team' 
-                      : roleData[role].team === 'village'
-                        ? 'Village Team'
-                        : 'Tanner'}
-                  </p>
+                  <div className={`${isLargeCard ? 'text-base px-3 py-2' : 'text-xs px-2 py-1'} text-white/90 font-semibold rounded-md bg-black/40 backdrop-blur-sm shadow-md`}>
+                    {roleData[role].team.charAt(0).toUpperCase() + roleData[role].team.slice(1)}
+                  </div>
                 )}
               </div>
               
-              {size === 'lg' && (
-                <p className="text-xs mt-3 text-center text-gray-300">
-                  {roleData[role].description}
-                </p>
+              {/* Middle section - empty for small cards or with description for large cards */}
+              {size === 'lg' && !showWerewolfImage && (
+                <div className="flex-1 flex items-center justify-center text-center">
+                  <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+                    {/* Role icon could go here */}
+                    <span className="text-white text-5xl font-bold">
+                      {role.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                </div>
               )}
+              
+              {/* Bottom section with role name */}
+              <div className={`text-center ${showWerewolfImage ? 'bg-black/60 -mx-2 -mb-2 px-3 py-3 rounded-b-lg backdrop-blur-md' : ''}`}>
+                <h3 className={`font-bold text-white ${isLargeCard ? 'text-3xl mb-2' : 'text-base'}`}>
+                  {roleData[role].name}
+                </h3>
+                
+                {((size === 'lg' && !showWerewolfImage) || showWerewolfImage) && (
+                  <p className={`${isLargeCard ? 'text-base leading-snug' : 'text-xs'} mt-1 text-center text-gray-300`}>
+                    {roleData[role].description}
+                  </p>
+                )}
+              </div>
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center text-white">
                 {isCenterCard ? (
-                  <span className="font-bold">?</span>
+                  <span className="text-3xl font-bold">?</span>
                 ) : (
-                  <span className="font-bold">ONE NIGHT</span>
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className={`font-bold ${isLargeCard ? 'text-4xl' : 'text-xl'}`}>ONE</div>
+                    <div className="w-20 h-1 bg-indigo-500 opacity-70 rounded-full"></div>
+                    <div className={`font-bold ${isLargeCard ? 'text-4xl' : 'text-xl'}`}>NIGHT</div>
+                  </div>
                 )}
               </div>
             </div>
           )}
         </div>
+        
+        {/* Add a dramatic inner border for special roles when the card is large */}
+        {isRevealed && role === 'werewolf' && (
+          <div className="absolute inset-0 pointer-events-none border-2 border-red-500/70 rounded-lg"></div>
+        )}
       </div>
     </div>
   );

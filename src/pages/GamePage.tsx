@@ -669,100 +669,110 @@ const GamePage: React.FC = () => {
         isOpen={showRoleModal}
         onClose={() => setShowRoleModal(false)}
         title="Your Role"
-        size="lg"
+        size="2xl"
       >
-        <div className="flex flex-col items-center">
-          <Card 
-            role={roleToShow}
-            isRevealed={true}
-            size="lg"
-            className="mb-4"
-          />
+        <div className="flex flex-col md:flex-row items-start gap-8 py-4">
+          {/* Card section - much larger card filling the left side */}
+          <div className="flex flex-col items-center md:w-1/3 my-4">
+            <div className="h-[450px] w-[300px] flex items-center justify-center mx-auto">
+              <Card 
+                role={roleToShow}
+                isRevealed={true}
+                size="lg"
+                className="w-full h-full"
+              />
+            </div>
+          </div>
           
-          <h3 className="text-xl font-bold text-white mb-1">{name}</h3>
-          
-          <p className="text-sm text-gray-400 mb-4">
-            {team === 'werewolf' ? 'Werewolf Team' : 
-             team === 'village' ? 'Village Team' : 'Tanner (Independent)'}
-          </p>
-          
-          <p className="text-gray-300 text-center mb-4">{description}</p>
-          
-          {originalRole === 'robber' && currentPlayer.robbedRole && (
-            <div className="bg-gray-800 p-4 rounded-lg w-full mb-4">
-              <p className="text-yellow-400 text-sm mb-1">Robber Result</p>
-              <p className="text-gray-300 mb-2">
-                You robbed <span className="font-semibold">{currentPlayer.robbedRole.targetPlayerName}</span> and took their role.
-              </p>
-              
-              <div className="flex justify-center gap-8 mt-4 mb-4">
-                <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-500 mb-2">Your Original Role</p>
-                  <Card 
-                    role="robber" 
-                    isRevealed={true}
-                    size="md"
-                    className="mb-2"
-                  />
-                  <p className="font-semibold text-indigo-400">
-                    Robber
-                  </p>
-                </div>
+          {/* Role details section */}
+          <div className="flex-1 flex flex-col md:w-2/3 md:pl-8 mt-8 md:mt-16">
+            <h3 className="text-3xl font-bold text-white mb-3">{name}</h3>
+            
+            <p className="text-lg text-gray-400 mb-5">
+              {team === 'werewolf' ? 'Werewolf Team' : 
+               team === 'village' ? 'Village Team' : 'Tanner (Independent)'}
+            </p>
+            
+            <p className="text-gray-300 text-xl mb-8 leading-relaxed">{description}</p>
+            
+            {originalRole === 'robber' && currentPlayer.robbedRole && (
+              <div className="bg-gray-800 p-5 rounded-lg w-full mb-6">
+                <p className="text-yellow-400 text-md mb-2">Robber Result</p>
+                <p className="text-gray-300 mb-4">
+                  You robbed <span className="font-semibold">{currentPlayer.robbedRole.targetPlayerName}</span> and took their role.
+                </p>
                 
-                <div className="flex items-center">
-                  <div className="rounded-full bg-gray-700 p-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
+                <div className="flex justify-center gap-8 mt-4 mb-4">
+                  <div className="flex flex-col items-center">
+                    <p className="text-sm text-gray-500 mb-2">Your Original Role</p>
+                    <Card 
+                      role="robber" 
+                      isRevealed={true}
+                      size="md"
+                      className="mb-2"
+                    />
+                    <p className="font-semibold text-indigo-400">
+                      Robber
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-gray-700 p-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col items-center">
+                    <p className="text-sm text-gray-500 mb-2">Your New Role</p>
+                    <Card 
+                      role={currentPlayer.robbedRole.targetRole || 'villager'} 
+                      isRevealed={true}
+                      size="md"
+                      className="mb-2"
+                    />
+                    <p className="font-semibold text-indigo-400">
+                      {currentPlayer.robbedRole.targetRole 
+                        ? currentPlayer.robbedRole.targetRole.charAt(0).toUpperCase() + currentPlayer.robbedRole.targetRole.slice(1) 
+                        : 'Villager'}
+                    </p>
                   </div>
                 </div>
                 
-                <div className="flex flex-col items-center">
-                  <p className="text-sm text-gray-500 mb-2">Your New Role</p>
-                  <Card 
-                    role={currentPlayer.robbedRole.targetRole || 'villager'} 
-                    isRevealed={true}
-                    size="md"
-                    className="mb-2"
-                  />
-                  <p className="font-semibold text-indigo-400">
-                    {currentPlayer.robbedRole.targetRole 
-                      ? currentPlayer.robbedRole.targetRole.charAt(0).toUpperCase() + currentPlayer.robbedRole.targetRole.slice(1) 
-                      : 'Villager'}
-                  </p>
-                </div>
-              </div>
-              
-              <p className="text-yellow-400 mt-2 text-sm text-center">
-                Remember your new role! The other player won't know their role has changed.
-              </p>
-            </div>
-          )}
-          
-          {roleChanged && (
-            <div className="bg-gray-800 p-4 rounded-lg w-full mb-4">
-              <p className="text-yellow-400 text-sm mb-1">Role Change</p>
-              <p className="text-gray-300">
-                Your original role was <span className="font-semibold">{roleData[originalRole as Role].name}</span> but it changed during the night!
-              </p>
-              {gameRoom.phase === 'results' && (
-                <p className="text-gray-400 mt-2 text-sm">
-                  In One Night Werewolf, your role can change during the night due to other players' actions.
+                <p className="text-yellow-400 mt-2 text-sm text-center">
+                  Remember your new role! The other player won't know their role has changed.
                 </p>
-              )}
-            </div>
-          )}
-          
-          {gameRoom.phase === 'night' && roleData[roleToShow].nightAction && (
-            <div className="bg-indigo-900/50 p-4 rounded-lg w-full mb-4">
-              <p className="text-indigo-300 font-semibold mb-1">Night Action</p>
-              <p className="text-gray-300">
-                You'll be woken up to perform your {roleData[roleToShow].nightAction} action when it's your turn.
-              </p>
-            </div>
-          )}
-          
-          <Button onClick={() => setShowRoleModal(false)}>
+              </div>
+            )}
+            
+            {roleChanged && (
+              <div className="bg-gray-800 p-5 rounded-lg w-full mb-6">
+                <p className="text-yellow-400 text-md mb-2">Role Change</p>
+                <p className="text-gray-300">
+                  Your original role was <span className="font-semibold">{roleData[originalRole as Role].name}</span> but it changed during the night!
+                </p>
+                {gameRoom.phase === 'results' && (
+                  <p className="text-gray-400 mt-2 text-sm">
+                    In One Night Werewolf, your role can change during the night due to other players' actions.
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {gameRoom.phase === 'night' && roleData[roleToShow].nightAction && (
+              <div className="bg-indigo-900/50 p-5 rounded-lg w-full mb-6">
+                <p className="text-indigo-300 font-semibold mb-2">Night Action</p>
+                <p className="text-gray-300">
+                  You'll be woken up to perform your {roleData[roleToShow].nightAction} action when it's your turn.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex justify-center mt-10">
+          <Button size="lg" onClick={() => setShowRoleModal(false)}>
             Close
           </Button>
         </div>
@@ -1130,7 +1140,7 @@ const GamePage: React.FC = () => {
                       onClick={() => setDrunkTarget(card.id)}
                     >
                       <Card 
-                        role="unknown" 
+                        role="villager" 
                         isRevealed={false}
                         size="md"
                       />

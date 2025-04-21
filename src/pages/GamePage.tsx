@@ -319,64 +319,130 @@ const GamePage: React.FC = () => {
   // Render for Day Phase
   const renderDayPhase = () => {
     return (
-      <div className="container mx-auto px-4 max-w-5xl py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Day Phase - Discussion</h2>
-          <Timer 
-            key={`day-timer-${gameRoom.dayTimeRemaining || 300}`}
-            seconds={gameRoom.dayTimeRemaining || 300} 
-            onComplete={() => {
-              // Timer will be handled by server, but we can show UI change
-              console.log("Day phase timer complete");
-            }} 
-          />
+      <div className="container mx-auto px-4 py-6">
+        {/* Header with moon/night background and timer */}
+        <div className="relative mb-8 bg-gradient-to-r from-indigo-900/80 to-blue-900/80 rounded-xl overflow-hidden shadow-2xl">
+          <div className="absolute inset-0 bg-cover bg-center opacity-20"
+               style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+          <div className="relative z-10 flex justify-between items-center p-6">
+            <div>
+              <h2 className="text-3xl font-bold text-white flex items-center">
+                <span className="mr-3">🌞</span>
+                Day Phase
+              </h2>
+              <p className="text-blue-200 mt-1">Discuss with other players to deduce the werewolf</p>
+            </div>
+            <div className="flex items-center">
+              <div className="bg-gray-900/60 backdrop-blur-sm px-4 py-3 rounded-lg">
+                <Timer 
+                  key={`day-timer-${gameRoom.dayTimeRemaining || 300}`}
+                  seconds={gameRoom.dayTimeRemaining || 300} 
+                  large
+                  onComplete={() => {
+                    console.log("Day phase timer complete");
+                  }} 
+                />
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <ChatBox 
-              messages={chatMessages}
-              onSendMessage={sendChatMessage}
-              className="h-[calc(100vh-200px)]"
-            />
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Chat Section - Takes up more space */}
+          <div className="lg:col-span-3">
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+              <ChatBox 
+                messages={chatMessages}
+                onSendMessage={sendChatMessage}
+                className="h-[calc(100vh-250px)]"
+              />
+            </div>
           </div>
           
-          <div className="flex flex-col gap-4">
-            <PlayerList 
-              players={gameRoom.players}
-              currentPlayerId={currentPlayer.id}
-            />
+          {/* Players & Controls Section */}
+          <div className="lg:col-span-1 space-y-5">
+            {/* Player List Panel */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+              <PlayerList 
+                players={gameRoom.players}
+                currentPlayerId={currentPlayer.id}
+                className="border-none"
+              />
+            </div>
             
-            <div className="bg-gray-900 rounded-lg p-4">
+            {/* View Role Button */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30 p-5">
               <Button 
                 variant="ghost" 
                 fullWidth 
                 onClick={() => setShowRoleModal(true)}
+                className="bg-blue-900/50 hover:bg-blue-800/70 text-white border border-blue-700/50 shadow-inner py-3"
               >
-                View Your Role
+                <span className="flex items-center justify-center">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  View Your Role
+                </span>
               </Button>
             </div>
             
+            {/* Host Controls - Only shown to host */}
             {currentPlayer.isHost && (
-              <div className="bg-gray-900 rounded-lg p-4">
-                <h3 className="font-semibold text-white mb-3">Host Controls</h3>
-                <p className="text-xs text-gray-400 mb-3">
-                  When everyone has finished discussing, start the voting phase.
-                </p>
-                <Button 
-                  fullWidth 
-                  onClick={() => {
-                    showConfirmation(
-                      "Start Voting Phase",
-                      "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf.",
-                      startVotingPhase
-                    );
-                  }}
-                >
-                  Start Voting
-                </Button>
+              <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
+                <div className="px-5 py-4 border-b border-purple-800/30">
+                  <h3 className="font-bold text-white flex items-center">
+                    <span className="mr-2">👑</span> Host Controls
+                  </h3>
+                </div>
+                <div className="p-5">
+                  <p className="text-gray-300 mb-4 text-sm">
+                    When everyone has finished discussing, start the voting phase to determine who gets eliminated.
+                  </p>
+                  <Button 
+                    fullWidth 
+                    onClick={() => {
+                      showConfirmation(
+                        "Start Voting Phase",
+                        "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf.",
+                        startVotingPhase
+                      );
+                    }}
+                    className="bg-purple-700 hover:bg-purple-600 transition-all transform hover:translate-y-[-2px] shadow-lg"
+                  >
+                    <span className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Start Voting
+                    </span>
+                  </Button>
+                </div>
               </div>
             )}
+            
+            {/* Game Info Box */}
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 p-5">
+              <h4 className="font-semibold text-white mb-3 flex items-center">
+                <span className="mr-2">ℹ️</span> Game Tips
+              </h4>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">•</span>
+                  <span>Discuss what role you claim to have</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">•</span>
+                  <span>Consider if anyone's story doesn't add up</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-indigo-400 mr-2">•</span>
+                  <span>Remember roles might have changed during the night</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

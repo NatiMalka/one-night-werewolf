@@ -507,127 +507,231 @@ const GamePage: React.FC = () => {
       ? gameRoom.players.find(player => player.id === gameRoom.hunterVictimId)
       : null;
     
+    // Determine winner background gradients
+    const winnerBackgroundClass = gameRoom.winningTeam === 'werewolf' 
+      ? 'bg-gradient-to-br from-red-900/80 to-gray-900' 
+      : gameRoom.winningTeam === 'village' 
+        ? 'bg-gradient-to-br from-blue-900/80 to-gray-900' 
+        : gameRoom.winningTeam === 'tanner'
+          ? 'bg-gradient-to-br from-amber-900/80 to-gray-900'
+          : 'bg-gray-900';
+    
     return (
-      <div className="container mx-auto px-4 max-w-5xl py-6">
-        <h2 className="text-2xl font-bold text-white mb-6">Game Results</h2>
+      <div className="container mx-auto px-4 py-8">
+        {/* Winner Banner */}
+        <div className={`${winnerBackgroundClass} rounded-xl p-8 mb-10 shadow-2xl text-center`}>
+          <h2 className={`text-5xl font-bold mb-4 ${
+            gameRoom.winningTeam === 'werewolf' ? 'text-red-400' : 
+            gameRoom.winningTeam === 'village' ? 'text-blue-400' : 
+            gameRoom.winningTeam === 'tanner' ? 'text-amber-400' : 'text-white'
+          }`}>
+            {gameRoom.winningTeam === 'werewolf' && '🐺 Werewolves Win!'}
+            {gameRoom.winningTeam === 'village' && '🏠 Villagers Win!'}
+            {gameRoom.winningTeam === 'tanner' && '⚰️ Tanner Wins!'}
+            {!gameRoom.winningTeam && 'Game Over'}
+          </h2>
+          
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+            {gameRoom.winningTeam === 'werewolf' && 'No werewolf was eliminated. The werewolves have infiltrated the village!'}
+            {gameRoom.winningTeam === 'village' && 'A werewolf was eliminated. The village is safe!'}
+            {gameRoom.winningTeam === 'tanner' && 'The Tanner was eliminated. Their wish for death has been fulfilled!'}
+          </p>
+        </div>
         
-        <div className="bg-gray-900 rounded-lg p-6 mb-6">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold text-indigo-400 mb-2">
-              {gameRoom.winningTeam === 'werewolf' && 'Werewolves Win!'}
-              {gameRoom.winningTeam === 'village' && 'Villagers Win!'}
-              {gameRoom.winningTeam === 'tanner' && 'Tanner Wins!'}
-              {!gameRoom.winningTeam && 'Game Over'}
-            </h3>
-            
-            <p className="text-gray-400">
-              {gameRoom.winningTeam === 'werewolf' && 'No werewolf was eliminated. The werewolves have infiltrated the village!'}
-              {gameRoom.winningTeam === 'village' && 'A werewolf was eliminated. The village is safe!'}
-              {gameRoom.winningTeam === 'tanner' && 'The Tanner was eliminated. Their wish for death has been fulfilled!'}
-            </p>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Eliminated Players Section */}
+          <div className="md:col-span-1">
+            {eliminatedPlayers.length > 0 && (
+              <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden mb-8">
+                <div className="bg-red-900/30 px-6 py-4 border-b border-red-900/50">
+                  <h3 className="text-2xl font-bold text-white flex items-center">
+                    <span className="mr-2">☠️</span> Eliminated
+                  </h3>
+                </div>
+                
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {eliminatedPlayers.map(player => (
+                      <div key={player.id} className="flex items-center gap-4 bg-gray-700/50 p-4 rounded-lg border border-gray-600/50">
+                        <div className="w-[120px] flex-shrink-0">
+                          <Card 
+                            role={player.currentRole || 'villager'}
+                            isRevealed={true}
+                            size="md"
+                            hideDescription={true}
+                          />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h4 className="text-xl font-semibold text-white mb-1">{player.name}</h4>
+                          <p className={`text-lg font-medium ${
+                            player.currentRole === 'werewolf' ? 'text-red-400' : 
+                            player.currentRole === 'tanner' ? 'text-amber-400' :
+                            'text-blue-400'
+                          }`}>
+                            {player.currentRole ? player.currentRole.charAt(0).toUpperCase() + player.currentRole.slice(1) : 'Villager'}
+                          </p>
+                          
+                          {player.originalRole !== player.currentRole && (
+                            <p className="text-sm text-gray-400 mt-1">
+                              Started as: {player.originalRole ? player.originalRole.charAt(0).toUpperCase() + player.originalRole.slice(1) : 'Villager'}
+                            </p>
+                          )}
+                          
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="bg-red-900/50 text-red-200 text-sm px-2 py-1 rounded">
+                              {gameRoom.voteCounts ? gameRoom.voteCounts[player.id] || 0 : 0} votes
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {hunterVictim && (
+                    <div className="mt-6 bg-yellow-900/20 border border-yellow-700/30 rounded-lg p-4">
+                      <p className="text-yellow-400 mb-3 font-semibold flex items-center">
+                        <span className="mr-2">🏹</span> Hunter's Last Shot
+                      </p>
+                      <div className="flex items-center gap-4">
+                        <div className="w-[100px] flex-shrink-0">
+                          <Card 
+                            role={hunterVictim.currentRole || 'villager'}
+                            isRevealed={true}
+                            size="md"
+                            hideDescription={true}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{hunterVictim.name}</p>
+                          <p className="text-sm text-gray-300">
+                            {hunterVictim.currentRole ? hunterVictim.currentRole.charAt(0).toUpperCase() + hunterVictim.currentRole.slice(1) : 'Villager'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           
-          {eliminatedPlayers.length > 0 && (
-            <div className="bg-gray-800 p-4 rounded-lg mb-6">
-              <h4 className="font-semibold text-white mb-3">Eliminated Players</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {eliminatedPlayers.map(player => (
-                  <div key={player.id} className="bg-gray-700 p-3 rounded-lg text-center">
-                    <p className="text-white font-medium mb-1">{player.name}</p>
-                    <Card 
-                      role={player.currentRole || 'villager'}
-                      isRevealed={true}
-                      size="sm"
-                      className="mx-auto mb-2"
-                    />
-                    <p className="text-sm text-red-400">
-                      {player.currentRole ? player.currentRole.charAt(0).toUpperCase() + player.currentRole.slice(1) : 'Villager'}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      Votes: {gameRoom.voteCounts ? gameRoom.voteCounts[player.id] || 0 : 0}
-                    </p>
-                  </div>
-                ))}
+          {/* Final Roles Section */}
+          <div className="md:col-span-2">
+            <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden">
+              <div className="bg-indigo-900/30 px-6 py-4 border-b border-indigo-900/50">
+                <h3 className="text-2xl font-bold text-white flex items-center">
+                  <span className="mr-2">🎭</span> Final Roles
+                </h3>
               </div>
               
-              {hunterVictim && (
-                <div className="mt-4 pt-3 border-t border-gray-700">
-                  <p className="text-yellow-400 mb-2">
-                    <span className="font-semibold">Hunter Effect:</span> {hunterVictim.name} was also eliminated!
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <Card 
-                      role={hunterVictim.currentRole || 'villager'}
-                      isRevealed={true}
-                      size="sm"
-                    />
-                    <span className="text-gray-300">
-                      {hunterVictim.name} ({hunterVictim.currentRole ? hunterVictim.currentRole.charAt(0).toUpperCase() + hunterVictim.currentRole.slice(1) : 'Villager'})
-                    </span>
-                  </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {gameRoom.players.map(player => {
+                    const voteCount = gameRoom.voteCounts ? gameRoom.voteCounts[player.id] || 0 : 0;
+                    const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
+                    const isEliminated = eliminatedIds.includes(player.id) || player.id === gameRoom.hunterVictimId;
+                    
+                    // Border colors based on role team
+                    const teamBorderClass = player.currentRole === 'werewolf' 
+                      ? 'border-red-700/70' 
+                      : player.currentRole === 'tanner' 
+                        ? 'border-amber-700/70' 
+                        : 'border-blue-700/70';
+                    
+                    // Background based on elimination status
+                    const bgClass = isEliminated 
+                      ? 'bg-gray-700/70 border-2 border-red-700/70' 
+                      : `bg-gray-700/30 border ${teamBorderClass}`;
+                    
+                    return (
+                      <div 
+                        key={player.id} 
+                        className={`rounded-lg overflow-hidden ${bgClass} transition-all hover:shadow-lg`}
+                      >
+                        <div className={`p-1 ${
+                          player.currentRole === 'werewolf' ? 'bg-gradient-to-r from-red-900 to-gray-800' : 
+                          player.currentRole === 'tanner' ? 'bg-gradient-to-r from-amber-900 to-gray-800' :
+                          'bg-gradient-to-r from-blue-900 to-gray-800'
+                        }`}>
+                          <div className="bg-gray-800 p-4 rounded-md">
+                            <div className="flex justify-between items-start mb-3">
+                              <h4 className="text-lg font-semibold text-white">{player.name}</h4>
+                              {isEliminated && (
+                                <span className="bg-red-900/70 text-white text-xs px-2 py-1 rounded-full">
+                                  Eliminated
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex justify-center mb-3">
+                              <Card 
+                                role={player.currentRole || 'villager'}
+                                isRevealed={true}
+                                size="md"
+                                hideDescription={true}
+                                className="mx-auto transform hover:scale-105 transition-transform duration-200"
+                              />
+                            </div>
+                            
+                            <p className={`text-center font-semibold text-lg ${
+                              player.currentRole === 'werewolf' ? 'text-red-400' : 
+                              player.currentRole === 'tanner' ? 'text-amber-400' :
+                              'text-blue-400'
+                            }`}>
+                              {player.currentRole ? player.currentRole.charAt(0).toUpperCase() + player.currentRole.slice(1) : 'Villager'}
+                            </p>
+                            
+                            <div className="mt-3 pt-3 border-t border-gray-700 space-y-1">
+                              {player.originalRole !== player.currentRole && (
+                                <p className="text-sm text-gray-400 flex justify-between">
+                                  <span>Started as:</span>
+                                  <span className="font-medium">{player.originalRole ? player.originalRole.charAt(0).toUpperCase() + player.originalRole.slice(1) : 'Villager'}</span>
+                                </p>
+                              )}
+                              
+                              <p className="text-sm text-gray-400 flex justify-between">
+                                <span>Votes received:</span>
+                                <span className="font-medium">{voteCount}</span>
+                              </p>
+                              
+                              {player.votedFor && (
+                                <p className="text-sm text-gray-400 flex justify-between">
+                                  <span>Voted for:</span>
+                                  <span className="font-medium truncate max-w-[120px]">{gameRoom.players.find(p => p.id === player.votedFor)?.name}</span>
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              )}
-            </div>
-          )}
-          
-          <div className="mb-6">
-            <h4 className="font-semibold text-white mb-3">Final Roles</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {gameRoom.players.map(player => {
-                const voteCount = gameRoom.voteCounts ? gameRoom.voteCounts[player.id] || 0 : 0;
-                const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
-                const isEliminated = eliminatedIds.includes(player.id) || player.id === gameRoom.hunterVictimId;
-                
-                return (
-                  <div 
-                    key={player.id} 
-                    className={`bg-gray-800 p-3 rounded-lg text-center ${isEliminated ? 'border border-red-700' : ''}`}
-                  >
-                    <p className="text-white font-medium mb-1">{player.name}</p>
-                    <Card 
-                      role={player.currentRole || 'villager'}
-                      isRevealed={true}
-                      size="sm"
-                      className="mx-auto mb-2"
-                    />
-                    <p className={`text-sm ${
-                      player.currentRole === 'werewolf' ? 'text-red-400' : 
-                      player.currentRole === 'tanner' ? 'text-yellow-400' :
-                      'text-green-400'
-                    }`}>
-                      {player.currentRole ? player.currentRole.charAt(0).toUpperCase() + player.currentRole.slice(1) : 'Villager'}
-                    </p>
-                    
-                    {player.originalRole !== player.currentRole && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Started as: {player.originalRole ? player.originalRole.charAt(0).toUpperCase() + player.originalRole.slice(1) : 'Villager'}
-                      </p>
-                    )}
-                    
-                    <p className="text-xs text-gray-400 mt-1">
-                      Votes: {voteCount}
-                    </p>
-                    
-                    {player.votedFor && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        Voted for: {gameRoom.players.find(p => p.id === player.votedFor)?.name || 'Unknown'}
-                      </p>
-                    )}
-                  </div>
-                );
-              })}
+              </div>
             </div>
           </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="mt-10 flex justify-center gap-6">
+          <Button 
+            size="lg" 
+            onClick={playAgain}
+            className="px-8 py-3 text-lg"
+          >
+            Play Again
+          </Button>
           
-          <div className="flex justify-center gap-4">
-            <Button onClick={playAgain}>
-              Play Again
-            </Button>
-            
-            <Button variant="secondary" onClick={leaveRoom}>
-              Leave Game
-            </Button>
-          </div>
+          <Button 
+            variant="secondary" 
+            size="lg"
+            onClick={leaveRoom}
+            className="px-8 py-3 text-lg"
+          >
+            Leave Game
+          </Button>
         </div>
       </div>
     );
@@ -709,6 +813,7 @@ const GamePage: React.FC = () => {
                       role="robber" 
                       isRevealed={true}
                       size="md"
+                      hideDescription={true}
                       className="mb-2"
                     />
                     <p className="font-semibold text-indigo-400">
@@ -730,6 +835,7 @@ const GamePage: React.FC = () => {
                       role={currentPlayer.robbedRole.targetRole || 'villager'} 
                       isRevealed={true}
                       size="md"
+                      hideDescription={true}
                       className="mb-2"
                     />
                     <p className="font-semibold text-indigo-400">
@@ -937,6 +1043,7 @@ const GamePage: React.FC = () => {
                         role={selectedPlayer.currentRole || 'villager'} 
                         isRevealed={true}
                         size="md"
+                        hideDescription={true}
                       />
                     </div>
                     <p className="text-center font-semibold text-indigo-400">
@@ -955,7 +1062,7 @@ const GamePage: React.FC = () => {
                             role={card.role} 
                             isRevealed={true}
                             size="md"
-                            className="mb-2"
+                            hideDescription={true}
                           />
                           <p className="font-semibold text-indigo-400">
                             {card.role.charAt(0).toUpperCase() + card.role.slice(1)}

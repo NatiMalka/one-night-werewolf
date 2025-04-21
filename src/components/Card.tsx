@@ -11,6 +11,7 @@ interface CardProps {
   className?: string;
   isCenterCard?: boolean;
   label?: string;
+  hideDescription?: boolean;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -21,7 +22,8 @@ const Card: React.FC<CardProps> = ({
   size = 'md',
   className = '',
   isCenterCard = false,
-  label
+  label,
+  hideDescription = false
 }) => {
   // Default sizes, but these can be overridden by className
   const sizeClasses = {
@@ -153,7 +155,7 @@ const Card: React.FC<CardProps> = ({
                   {roleData[role].name}
                 </h3>
                 
-                {((size === 'lg' && !showWerewolfImage) || showWerewolfImage) && (
+                {!hideDescription && ((size === 'lg' && !showWerewolfImage) || showWerewolfImage) && (
                   <p className={`${isLargeCard ? 'text-base leading-snug' : 'text-xs'} mt-1 text-center text-gray-300`}>
                     {roleData[role].description}
                   </p>

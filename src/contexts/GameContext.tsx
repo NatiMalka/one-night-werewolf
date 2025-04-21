@@ -25,6 +25,7 @@ interface GameContextProps {
   playAgain: () => Promise<void>;
   skipCurrentNightAction: () => Promise<void>;
   startVotingPhase: () => Promise<void>;
+  kickPlayer: (playerId: string) => Promise<void>;
 }
 
 const GameContext = createContext<GameContextProps | undefined>(undefined);
@@ -504,6 +505,41 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
   };
   
+  // Add the kickPlayer function
+  const kickPlayer = async (playerId: string): Promise<void> => {
+    if (!gameRoom || !currentPlayer || !currentPlayer.isHost) return;
+    
+    try {
+      // Only host can kick players
+      if (!currentPlayer.isHost) {
+        throw new Error("Only the host can kick players");
+      }
+      
+      // Cannot kick yourself
+      if (playerId === currentPlayer.id) {
+        throw new Error("You cannot kick yourself");
+      }
+      
+      await firebaseGameService.kickPlayer(gameRoom.code, playerId);
+      
+      // Send a system message to chat
+      const systemMessage: ChatMessage = {
+        id: uuidv4(),
+        playerId: "system",
+        playerName: "System",
+        content: `A player has been removed from the game by the host.`,
+        timestamp: Date.now(),
+        isSystemMessage: true
+      };
+      await firebaseGameService.sendChatMessage(gameRoom.code, systemMessage);
+      
+    } catch (error) {
+      console.error("Error kicking player:", error);
+      setError("Failed to kick player");
+      throw error;
+    }
+  };
+  
   const value = {
     gameRoom,
     currentPlayer,
@@ -521,7 +557,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     setReady,
     playAgain,
     skipCurrentNightAction,
-    startVotingPhase
+    startVotingPhase,
+    kickPlayer
   };
   
   return (

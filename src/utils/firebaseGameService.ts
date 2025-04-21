@@ -113,6 +113,41 @@ class FirebaseGameService {
     });
   }
 
+  // Kick player (can only be used by host)
+  kickPlayer(roomCode: string, playerId: string): Promise<void> {
+    console.log("Kicking player from room:", roomCode, "player:", playerId);
+    
+    // Send a system message that player was kicked
+    const kickMessage: ChatMessage = {
+      id: Date.now().toString(),
+      playerId: "system",
+      playerName: "System",
+      content: `⛔ A player has been removed from the game by the host.`,
+      timestamp: Date.now(),
+      isSystemMessage: true
+    };
+
+    // First create the system message
+    return this.sendChatMessage(roomCode, kickMessage)
+      .then(() => {
+        // Then update anti-cache parameter to trigger refresh for all players
+        return update(ref(database, `rooms/${roomCode}`), {
+          antiCache: this.getAntiCacheParam()
+        });
+      })
+      .then(() => {
+        // Finally remove the player
+        return remove(ref(database, `rooms/${roomCode}/players/${playerId}`));
+      })
+      .then(() => {
+        console.log("Player kicked successfully");
+      })
+      .catch(error => {
+        console.error("Failed to kick player:", error);
+        throw error;
+      });
+  }
+
   // Start game
   startGame(roomCode: string, selectedRoles: Role[]): Promise<void> {
     console.log("Starting game for room:", roomCode, "with roles:", selectedRoles);

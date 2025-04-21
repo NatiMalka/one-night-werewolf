@@ -3,11 +3,24 @@ import { useGame } from '../contexts/GameContext';
 import Button from '../components/Button';
 import PlayerList from '../components/PlayerList';
 import RoleSelection from '../components/RoleSelection';
+import Modal from '../components/Modal';
 import { Role } from '../types';
+import { AlertTriangle } from 'lucide-react';
 
 const LobbyPage: React.FC = () => {
-  const { gameRoom, currentPlayer, leaveRoom, startGame, setReady } = useGame();
+  const { gameRoom, currentPlayer, leaveRoom, startGame, setReady, kickPlayer } = useGame();
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  
+  // Add state for kick confirmation modal
+  const [kickConfirmation, setKickConfirmation] = useState<{
+    isOpen: boolean;
+    playerId: string;
+    playerName: string;
+  }>({
+    isOpen: false,
+    playerId: '',
+    playerName: '',
+  });
   
   if (!gameRoom || !currentPlayer) {
     return null;
@@ -35,6 +48,32 @@ const LobbyPage: React.FC = () => {
     setShowRoleSelection(false);
   };
   
+  // Handler for kick player button
+  const handleKickPlayer = (playerId: string) => {
+    const playerToKick = gameRoom.players.find(p => p.id === playerId);
+    if (playerToKick) {
+      setKickConfirmation({
+        isOpen: true,
+        playerId: playerId,
+        playerName: playerToKick.name,
+      });
+    }
+  };
+  
+  // Handler for confirming kick
+  const confirmKickPlayer = async () => {
+    try {
+      await kickPlayer(kickConfirmation.playerId);
+      setKickConfirmation({
+        isOpen: false,
+        playerId: '',
+        playerName: '',
+      });
+    } catch (error) {
+      console.error("Failed to kick player:", error);
+    }
+  };
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
@@ -59,6 +98,9 @@ const LobbyPage: React.FC = () => {
               players={gameRoom.players} 
               currentPlayerId={currentPlayer.id}
               className="mb-6"
+              isHost={isHost}
+              onKick={handleKickPlayer}
+              showKickButton={isHost && gameRoom.phase === 'lobby'}
             />
             
             <div className="bg-gray-800 rounded-lg p-4">
@@ -161,6 +203,40 @@ const LobbyPage: React.FC = () => {
           onComplete={handleRoleSelectionComplete}
         />
       )}
+      
+      {/* Kick confirmation modal */}
+      <Modal
+        isOpen={kickConfirmation.isOpen}
+        onClose={() => setKickConfirmation({ ...kickConfirmation, isOpen: false })}
+        title="Kick Player"
+        size="md"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-yellow-900/30 p-2 rounded-full">
+              <AlertTriangle className="text-yellow-500" size={24} />
+            </div>
+            <p className="text-gray-300">
+              Are you sure you want to kick <span className="font-semibold text-white">{kickConfirmation.playerName}</span> from the game? This action cannot be undone.
+            </p>
+          </div>
+          
+          <div className="flex justify-end gap-3 mt-2">
+            <Button 
+              variant="secondary"
+              onClick={() => setKickConfirmation({ ...kickConfirmation, isOpen: false })}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="danger" 
+              onClick={confirmKickPlayer}
+            >
+              Kick Player
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Player } from '../types';
 import Avatar from './Avatar';
+import { UserX } from 'lucide-react';
 
 interface PlayerListProps {
   players: Player[];
@@ -10,6 +11,9 @@ interface PlayerListProps {
   onVote?: (playerId: string) => void;
   voteCounts?: Record<string, number>;
   className?: string;
+  isHost?: boolean;
+  onKick?: (playerId: string) => void;
+  showKickButton?: boolean;
 }
 
 const PlayerList: React.FC<PlayerListProps> = ({
@@ -19,7 +23,10 @@ const PlayerList: React.FC<PlayerListProps> = ({
   votingEnabled = false,
   onVote,
   voteCounts = {},
-  className = ''
+  className = '',
+  isHost = false,
+  onKick,
+  showKickButton = false
 }) => {
   return (
     <div className={`bg-gray-900 rounded-lg shadow-md overflow-hidden ${className}`}>
@@ -39,7 +46,7 @@ const PlayerList: React.FC<PlayerListProps> = ({
                 ${isCurrentPlayer ? 'bg-gray-800 bg-opacity-50' : ''}
               `}
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-3 flex-1">
                 <Avatar 
                   name={player.name} 
                   image={player.avatar}
@@ -83,15 +90,29 @@ const PlayerList: React.FC<PlayerListProps> = ({
                 </div>
               </div>
               
-              {votingEnabled && player.id !== currentPlayerId && onVote && (
-                <button
-                  onClick={() => onVote(player.id)}
-                  className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded
-                            transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  Vote
-                </button>
-              )}
+              <div className="flex space-x-2">
+                {showKickButton && isHost && !isCurrentPlayer && onKick && (
+                  <button
+                    onClick={() => onKick(player.id)}
+                    className="bg-red-700 hover:bg-red-800 text-white text-xs px-2 py-1 rounded
+                              flex items-center transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                    title="Kick player"
+                  >
+                    <UserX size={14} className="mr-1" />
+                    Kick
+                  </button>
+                )}
+                
+                {votingEnabled && !isCurrentPlayer && onVote && (
+                  <button
+                    onClick={() => onVote(player.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1 rounded
+                              transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                  >
+                    Vote
+                  </button>
+                )}
+              </div>
             </li>
           );
         })}

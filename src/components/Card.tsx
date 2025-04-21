@@ -66,8 +66,11 @@ const Card: React.FC<CardProps> = ({
   // Determine if we should show the seer image
   const showSeerImage = isRevealed && role === 'seer';
   
+  // Determine if we should show the robber image
+  const showRobberImage = isRevealed && role === 'robber';
+  
   // Special treatments for different roles
-  const hasSpecialBackground = isRevealed && (role === 'werewolf' || role === 'seer');
+  const hasSpecialBackground = isRevealed && (role === 'werewolf' || role === 'seer' || role === 'robber');
   
   // Determine if this is a large card (either by size prop or className containing scale)
   const isLargeCard = size === 'lg';
@@ -94,10 +97,14 @@ const Card: React.FC<CardProps> = ({
         style={hasSpecialBackground ? { 
           boxShadow: role === 'werewolf' ? 
             '0 0 30px rgba(220, 38, 38, 0.6), 0 0 60px rgba(220, 38, 38, 0.3)' :
-            '0 0 30px rgba(79, 70, 229, 0.6), 0 0 60px rgba(79, 70, 229, 0.3)', 
+            role === 'seer' ?
+              '0 0 30px rgba(79, 70, 229, 0.6), 0 0 60px rgba(79, 70, 229, 0.3)' :
+              '0 0 30px rgba(14, 165, 233, 0.6), 0 0 60px rgba(14, 165, 233, 0.3)', 
           border: role === 'werewolf' ?
             '1px solid rgba(220, 38, 38, 0.5)' : 
-            '1px solid rgba(79, 70, 229, 0.5)'
+            role === 'seer' ?
+              '1px solid rgba(79, 70, 229, 0.5)' :
+              '1px solid rgba(14, 165, 233, 0.5)'
         } : {}}
       >
         {/* Card Back Pattern */}
@@ -132,6 +139,18 @@ const Card: React.FC<CardProps> = ({
           </div>
         )}
 
+        {/* Robber Image */}
+        {showRobberImage && (
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <img 
+              src="/images/Robber.jpg" 
+              alt="Robber" 
+              className="absolute w-full h-full object-contain opacity-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-sky-950 via-sky-950/30 to-transparent" />
+          </div>
+        )}
+
         <div className="h-full w-full flex flex-col justify-between p-2 relative z-10">
           {isRevealed && role ? (
             <>
@@ -157,7 +176,7 @@ const Card: React.FC<CardProps> = ({
               </div>
               
               {/* Middle section - empty for small cards or with description for large cards */}
-              {size === 'lg' && !showWerewolfImage && !showSeerImage && (
+              {size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage && (
                 <div className="flex-1 flex items-center justify-center text-center">
                   <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
                     {/* Role icon could go here */}
@@ -169,12 +188,12 @@ const Card: React.FC<CardProps> = ({
               )}
               
               {/* Bottom section with role name */}
-              <div className={`text-center ${(showWerewolfImage || showSeerImage) ? 'bg-black/60 -mx-2 -mb-2 px-3 py-3 rounded-b-lg backdrop-blur-md' : ''}`}>
+              <div className={`text-center ${(showWerewolfImage || showSeerImage || showRobberImage) ? 'bg-black/60 -mx-2 -mb-2 px-3 py-3 rounded-b-lg backdrop-blur-md' : ''}`}>
                 <h3 className={`font-bold text-white ${isLargeCard ? 'text-3xl mb-2' : 'text-base'}`}>
                   {roleData[role].name}
                 </h3>
                 
-                {!hideDescription && ((size === 'lg' && !showWerewolfImage && !showSeerImage) || showWerewolfImage || showSeerImage) && (
+                {!hideDescription && ((size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage) || showWerewolfImage || showSeerImage || showRobberImage) && (
                   <p className={`${isLargeCard ? 'text-base leading-snug' : 'text-xs'} mt-1 text-center text-gray-300`}>
                     {roleData[role].description}
                   </p>
@@ -204,6 +223,9 @@ const Card: React.FC<CardProps> = ({
         )}
         {isRevealed && role === 'seer' && (
           <div className="absolute inset-0 pointer-events-none border-2 border-indigo-500/70 rounded-lg"></div>
+        )}
+        {isRevealed && role === 'robber' && (
+          <div className="absolute inset-0 pointer-events-none border-2 border-sky-500/70 rounded-lg"></div>
         )}
       </div>
     </div>

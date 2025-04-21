@@ -8,7 +8,72 @@ import Timer from '../components/Timer';
 import Modal from '../components/Modal';
 import { Role } from '../types';
 import { roleData } from '../utils/gameUtils';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
+
+// Add a Toast notification component
+const Toast = ({ message, onClose }: { message: string, onClose: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 5000); // Auto-close after 5 seconds
+    
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-indigo-900 text-white px-4 py-3 rounded-lg shadow-lg z-50 max-w-md animate-fadeIn">
+      <CheckCircle className="text-green-400" size={20} />
+      <div className="flex-1">{message}</div>
+      <button 
+        onClick={onClose} 
+        className="text-gray-300 hover:text-white"
+      >
+        &times;
+      </button>
+    </div>
+  );
+};
+
+// Add a Confirmation Modal component
+const ConfirmationModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = "Confirm",
+  cancelText = "Cancel",
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+}) => {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="md">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <div className="bg-yellow-900/30 p-2 rounded-full">
+            <AlertTriangle className="text-yellow-500" size={24} />
+          </div>
+          <p className="text-gray-300">{message}</p>
+        </div>
+        
+        <div className="flex justify-end gap-3 mt-2">
+          <Button variant="secondary" onClick={onClose}>
+            {cancelText}
+          </Button>
+          <Button onClick={onConfirm}>
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
 
 const GamePage: React.FC = () => {
   const { 
@@ -42,6 +107,22 @@ const GamePage: React.FC = () => {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
   
+  // Add toast notification state
+  const [toast, setToast] = useState<string | null>(null);
+  
+  // Add confirmation modal states
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+  });
+  
   // Show role modal automatically when game starts
   useEffect(() => {
     if (gameRoom?.phase === 'night' && currentPlayer?.originalRole) {
@@ -70,6 +151,16 @@ const GamePage: React.FC = () => {
     gameRoom.currentNightAction && 
     originalRole && 
     roleData[originalRole as Role].nightAction === gameRoom.currentNightAction;
+  
+  // Helper function to show confirmation modals
+  const showConfirmation = (title: string, message: string, onConfirm: () => void) => {
+    setConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      onConfirm,
+    });
+  };
   
   // Handle night action submission
   const handleNightActionSubmit = () => {
@@ -107,8 +198,8 @@ const GamePage: React.FC = () => {
             originalRobberRole: currentRole 
           });
           
-          // Show a message that they've successfully robbed a player
-          alert(`You've successfully robbed ${targetPlayer?.name}! You'll be able to see your new role later by clicking on "View Your Role".`);
+          // Show a custom toast notification instead of browser alert
+          setToast(`You've successfully robbed ${targetPlayer?.name}! You'll be able to see your new role later by clicking on "View Your Role".`);
         }
         break;
         
@@ -201,13 +292,11 @@ const GamePage: React.FC = () => {
                     ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
                     : 'current';
                   
-                  const isConfirmed = window.confirm(
-                    `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`
+                  showConfirmation(
+                    `Skip ${currentRole} Timer`,
+                    `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`,
+                    skipCurrentNightAction
                   );
-                  
-                  if (isConfirmed) {
-                    skipCurrentNightAction();
-                  }
                 }}
               >
                 Skip {gameRoom.currentNightAction 
@@ -277,13 +366,11 @@ const GamePage: React.FC = () => {
                 <Button 
                   fullWidth 
                   onClick={() => {
-                    const isConfirmed = window.confirm(
-                      "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf."
+                    showConfirmation(
+                      "Start Voting Phase",
+                      "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf.",
+                      startVotingPhase
                     );
-                    
-                    if (isConfirmed) {
-                      startVotingPhase();
-                    }
                   }}
                 >
                   Start Voting
@@ -305,6 +392,23 @@ const GamePage: React.FC = () => {
     // Count how many players have voted
     const playersVoted = gameRoom.players.filter(player => player.votedFor).length;
     const totalPlayers = gameRoom.players.length;
+    
+    // Handle vote function with toast notification
+    const handleVote = (playerId: string) => {
+      // Get the player name
+      const targetPlayer = gameRoom.players.find(p => p.id === playerId);
+      
+      // Show confirmation modal before voting
+      showConfirmation(
+        "Confirm Your Vote",
+        `Are you sure you want to vote for ${targetPlayer?.name}? You cannot change your vote once submitted.`,
+        async () => {
+          await votePlayer(playerId);
+          // Show toast notification after voting
+          setToast(`You voted for ${targetPlayer?.name}. Waiting for other players to vote.`);
+        }
+      );
+    };
     
     return (
       <div className="container mx-auto px-4 max-w-5xl py-6">
@@ -332,7 +436,7 @@ const GamePage: React.FC = () => {
               players={gameRoom.players}
               currentPlayerId={currentPlayer.id}
               votingEnabled={!hasVoted}
-              onVote={votePlayer}
+              onVote={handleVote}
               voteCounts={playerVotes}
             />
             
@@ -1187,6 +1291,22 @@ const GamePage: React.FC = () => {
         {renderGamePhase()}
         {renderRoleModal()}
         {renderActionModal()}
+        {toast && (
+          <Toast 
+            message={toast} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+        <ConfirmationModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          onConfirm={() => {
+            confirmModal.onConfirm();
+            setConfirmModal({ ...confirmModal, isOpen: false });
+          }}
+          title={confirmModal.title}
+          message={confirmModal.message}
+        />
       </main>
     </div>
   );

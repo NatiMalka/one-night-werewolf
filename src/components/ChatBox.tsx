@@ -41,7 +41,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         <h2 className="text-lg font-semibold text-white">Discussion</h2>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-4 max-h-80">
+      <div className="flex-1 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 py-6">
             No messages yet. Start the discussion!

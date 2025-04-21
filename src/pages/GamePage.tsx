@@ -350,12 +350,12 @@ const GamePage: React.FC = () => {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Chat Section - Takes up more space */}
-          <div className="lg:col-span-3">
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
+          <div className="lg:col-span-3 flex flex-col">
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 flex-1">
               <ChatBox 
                 messages={chatMessages}
                 onSendMessage={sendChatMessage}
-                className="h-[calc(100vh-250px)]"
+                className="h-[550px]" 
               />
             </div>
           </div>

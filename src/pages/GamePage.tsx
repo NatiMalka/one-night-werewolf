@@ -53,6 +53,13 @@ const GamePage: React.FC = () => {
     return null;
   }
   
+  // Redirect to lobby page if game phase is lobby
+  useEffect(() => {
+    if (gameRoom.phase === 'lobby') {
+      window.location.href = `/room/${gameRoom.code}`;
+    }
+  }, [gameRoom.phase, gameRoom.code]);
+  
   // Get current player's role information
   const currentRole = currentPlayer.currentRole || 'villager';
   const originalRole = currentPlayer.originalRole || 'villager';
@@ -383,11 +390,10 @@ const GamePage: React.FC = () => {
   // Render for Results Phase
   const renderResultsPhase = () => {
     // Find eliminated players
-    const eliminatedPlayers = gameRoom.eliminatedPlayerIds 
-      ? gameRoom.players.filter(player => 
-          gameRoom.eliminatedPlayerIds.includes(player.id)
-        )
-      : [];
+    const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
+    const eliminatedPlayers = gameRoom.players.filter(player => 
+      eliminatedIds.includes(player.id)
+    );
     
     // Find hunter victim if any
     const hunterVictim = gameRoom.hunterVictimId 
@@ -522,6 +528,13 @@ const GamePage: React.FC = () => {
   
   const renderGamePhase = () => {
     switch (gameRoom.phase) {
+      case 'lobby':
+        return (
+          <div className="flex flex-col items-center justify-center py-10">
+            <h2 className="text-2xl font-bold text-white mb-6">Returning to Lobby...</h2>
+            <p className="text-gray-400">Please wait while we redirect you...</p>
+          </div>
+        );
       case 'night':
         return renderNightPhase();
       case 'day':

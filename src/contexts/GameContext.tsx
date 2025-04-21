@@ -411,8 +411,43 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     if (!gameRoom || !currentPlayer || !currentPlayer.isHost) return;
     
     try {
-      // Reset the game state
-      // Later we might want to implement this on the server
+      console.log("Restarting game with same players");
+      
+      // Create player updates - reset roles and ready states
+      const playerUpdates: Record<string, unknown> = {};
+      gameRoom.players.forEach(player => {
+        playerUpdates[`players/${player.id}/isReady`] = false;
+        playerUpdates[`players/${player.id}/originalRole`] = null;
+        playerUpdates[`players/${player.id}/currentRole`] = null;
+        playerUpdates[`players/${player.id}/votedFor`] = null;
+      });
+      
+      // Reset the entire game state in Firebase
+      await firebaseGameService.updateRoomData(gameRoom.code, {
+        phase: 'lobby',
+        ...playerUpdates,
+        centerCards: [],
+        nightActionsCompleted: [],
+        currentNightAction: null,
+        winningTeam: null,
+        eliminatedPlayerIds: null,
+        hunterVictimId: null,
+        voteCounts: null,
+        antiCache: Date.now().toString()
+      });
+      
+      // Send a system message to chat
+      const systemMessage: ChatMessage = {
+        id: uuidv4(),
+        playerId: "system",
+        playerName: "System",
+        content: `🔄 ${currentPlayer.name} has started a new game with the same players.`,
+        timestamp: Date.now(),
+        isSystemMessage: true
+      };
+      await firebaseGameService.sendChatMessage(gameRoom.code, systemMessage);
+      
+      // Optimistically update local state
       setGameRoom(prev => prev ? {
         ...prev,
         phase: 'lobby',
@@ -425,11 +460,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         })),
         centerCards: [],
         nightActionsCompleted: [],
-        winningTeam: undefined
+        winningTeam: undefined,
+        eliminatedPlayerIds: undefined,
+        hunterVictimId: undefined,
+        voteCounts: undefined
       } : null);
       
-      // Let Firebase know about this reset
-      // TODO: Implement this properly on server
     } catch (error) {
       console.error("Error restarting game:", error);
       setError("Failed to restart game");

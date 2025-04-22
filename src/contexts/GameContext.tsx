@@ -4,8 +4,6 @@ import { v4 as uuidv4 } from 'uuid';
 import firebaseGameService from '../utils/firebaseGameService';
 import { GameRoom, Player, Role, ChatMessage, NightAction } from '../types';
 import { dealRoles } from '../utils/gameUtils';
-import { database } from '../utils/firebaseConfig';
-import { ref, set, push, onValue, off, remove, update, get } from 'firebase/database';
 
 interface GameContextProps {
   gameRoom: GameRoom | null;
@@ -156,10 +154,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Handle night timer
   useEffect(() => {
     if (gameRoom?.phase === 'night' && gameRoom.nightTimeRemaining > 0) {
+      // Don't update timer if auto-skipping is in progress
+      if (gameRoom.isAutoSkipping) {
+        return;
+      }
+      
       // Set up timer to update every second
       const timer = setInterval(() => {
         setGameRoom(prevRoom => {
           if (!prevRoom) return null;
+          
+          // Don't update timer if auto-skipping flag has been set
+          if (prevRoom.isAutoSkipping) {
+            return prevRoom;
+          }
           
           const newTimeRemaining = Math.max(0, prevRoom.nightTimeRemaining - 1);
           
@@ -179,7 +187,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       
       return () => clearInterval(timer);
     }
-  }, [gameRoom?.phase, gameRoom?.nightTimeRemaining]);
+  }, [gameRoom?.phase, gameRoom?.nightTimeRemaining, gameRoom?.isAutoSkipping]);
   
   // Handle day timer
   useEffect(() => {

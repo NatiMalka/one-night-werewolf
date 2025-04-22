@@ -66,6 +66,7 @@ export type GameRoom = {
   eliminatedPlayerIds?: string[];
   hunterVictimId?: string;
   voteCounts?: Record<string, number>;
+  isAutoSkipping?: boolean;
 };
 
 export type ChatMessage = {

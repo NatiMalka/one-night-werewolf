@@ -239,6 +239,11 @@ class FirebaseGameService {
           if (currentAction && this.wasActionSkippedAutomatically(currentAction, roomData.players)) {
             console.log(`First night action ${currentAction} has no players, auto-skipping...`);
             
+            // Mark room as auto-skipping to pause the client timer
+            update(ref(database, `rooms/${roomCode}`), {
+              isAutoSkipping: true
+            });
+            
             // Random delay between 10-15 seconds, then skip this action
             const waitTime = Math.floor(Math.random() * 6000) + 10000; // 10-15 seconds
             
@@ -370,6 +375,11 @@ class FirebaseGameService {
           actionData.autoSkipped || 
           this.wasActionSkippedAutomatically(action, roomData.players);
         
+        // Add an isAutoSkipping flag to updates when an action is being auto-skipped
+        if (wasSkippedAutomatically && !actionData.skippedByHost) {
+          updates.isAutoSkipping = true;
+        }
+        
         // If an action was skipped automatically (no player with that role), 
         // create a promise that resolves after a random delay between 10-15 seconds
         const maybeSimulateWait = (callback: () => void) => {
@@ -393,6 +403,7 @@ class FirebaseGameService {
             console.log("Moving to next night action:", nextAction);
             updates.currentNightAction = nextAction;
             updates.nightTimeRemaining = 60; // Reset timer for next action
+            updates.isAutoSkipping = false; // Reset auto-skipping flag
           } 
           // Otherwise, move to day phase
           else {
@@ -401,6 +412,7 @@ class FirebaseGameService {
             updates.currentNightAction = null;
             updates.dayTimeRemaining = 300; // 5 minutes for day phase
             updates.dayStartedAt = Date.now();
+            updates.isAutoSkipping = false; // Reset auto-skipping flag
           }
         }).then(() => {
           // Apply the updates
@@ -409,6 +421,11 @@ class FirebaseGameService {
           // After updating, check if the next action needs to be skipped as well
           if (nextAction && this.wasActionSkippedAutomatically(nextAction, roomData.players)) {
             console.log(`Next night action ${nextAction} has no players, planning to auto-skip...`);
+            
+            // Mark room as auto-skipping to pause the client timer
+            update(ref(database, `rooms/${roomCode}`), {
+              isAutoSkipping: true
+            });
             
             // Random delay between 10-15 seconds, then skip this action
             const waitTime = Math.floor(Math.random() * 6000) + 10000; // 10-15 seconds

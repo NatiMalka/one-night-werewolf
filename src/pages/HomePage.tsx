@@ -150,8 +150,14 @@ const HomePage: React.FC = () => {
       <header className={`pt-12 pb-6 px-4 relative z-10 transition-all duration-1000 ${animateIn ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'}`}>
         <div className="container mx-auto">
           <div className="text-center">
-            <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-indigo-400 inline-flex items-center justify-center">
-              <Moon className="mr-3 text-indigo-400" size={40} />
+            <div className="flex items-center justify-center mb-4">
+              <img 
+                src="/images/logo.jpg" 
+                alt="One Night Werewolf Logo" 
+                className="h-24 w-auto rounded-lg shadow-lg animate-float"
+              />
+            </div>
+            <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-300 to-indigo-400">
               One Night Werewolf
             </h1>
             <p className="text-indigo-200/80 mt-3 text-lg max-w-xl mx-auto">

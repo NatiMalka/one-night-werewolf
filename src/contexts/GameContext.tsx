@@ -163,13 +163,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
           
           const newTimeRemaining = Math.max(0, prevRoom.nightTimeRemaining - 1);
           
-          // If timer reaches 0, move to next night action or day phase
+          // If timer reaches 0, just keep it at 0 and wait for server update
+          // Do not trigger any game progression actions on the client
           if (newTimeRemaining === 0) {
-            // This will be handled by Firebase functions or another mechanism
-            console.log("Night timer reached 0");
-            
-            // You could trigger an action here if needed to progress the game
-            // For now, just update the UI
+            console.log("Night timer reached 0 - waiting for server update");
+            // No action needed - server will handle this with random timing
           }
           
           return {

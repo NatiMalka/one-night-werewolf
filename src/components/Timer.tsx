@@ -6,6 +6,7 @@ interface TimerProps {
   large?: boolean;
   paused?: boolean;
   className?: string;
+  completeText?: string;
 }
 
 const Timer: React.FC<TimerProps> = ({
@@ -13,19 +14,23 @@ const Timer: React.FC<TimerProps> = ({
   onComplete,
   large = false,
   paused = false,
-  className = ''
+  className = '',
+  completeText
 }) => {
   const [timeLeft, setTimeLeft] = useState(seconds);
+  const [isComplete, setIsComplete] = useState(false);
   
   // Reset timer when seconds prop changes
   useEffect(() => {
     setTimeLeft(seconds);
+    setIsComplete(seconds <= 0);
   }, [seconds]);
   
   useEffect(() => {
     if (paused) return;
     
     if (timeLeft <= 0) {
+      setIsComplete(true);
       if (onComplete) onComplete();
       return;
     }
@@ -34,9 +39,12 @@ const Timer: React.FC<TimerProps> = ({
       setTimeLeft(prev => {
         const newValue = prev - 1;
         // Check if timer just reached zero
-        if (newValue === 0 && onComplete) {
-          // Schedule onComplete to run in the next frame
-          setTimeout(onComplete, 0);
+        if (newValue === 0) {
+          setIsComplete(true);
+          if (onComplete) {
+            // Schedule onComplete to run in the next frame
+            setTimeout(onComplete, 0);
+          }
         }
         return newValue;
       });
@@ -57,6 +65,7 @@ const Timer: React.FC<TimerProps> = ({
   
   // Determine color based on time left
   const getColor = () => {
+    if (isComplete && completeText) return 'text-purple-500';
     if (timeLeft > seconds * 0.66) return 'text-green-500';
     if (timeLeft > seconds * 0.33) return 'text-yellow-500';
     return 'text-red-500';
@@ -89,7 +98,7 @@ const Timer: React.FC<TimerProps> = ({
             strokeWidth="8" 
             strokeLinecap="round"
             strokeDasharray="282.7"
-            strokeDashoffset={282.7 - (percentage * 282.7 / 100)}
+            strokeDashoffset={isComplete ? 0 : 282.7 - (percentage * 282.7 / 100)}
             className={getColor()}
           />
         </svg>
@@ -99,7 +108,13 @@ const Timer: React.FC<TimerProps> = ({
           font-mono font-bold ${getColor()}
           ${large ? 'text-2xl' : 'text-xl'}
         `}>
-          {formatTime(timeLeft)}
+          {isComplete && completeText ? (
+            <div className="text-center text-xs font-medium">
+              {completeText}
+            </div>
+          ) : (
+            formatTime(timeLeft)
+          )}
         </div>
       </div>
     </div>

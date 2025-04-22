@@ -401,6 +401,7 @@ const GamePage: React.FC = () => {
                       }
                     }
                   }} 
+                  completeText="Waiting for next action..."
                 />
               </div>
             </div>
@@ -445,7 +446,9 @@ const GamePage: React.FC = () => {
                     <p className="text-xl text-gray-300 mb-6">
                       {canPerformAction 
                         ? "It's your turn to perform your role's action"
-                        : "Please wait while other players perform their actions"}
+                        : gameRoom.nightTimeRemaining === 0
+                          ? "Waiting for next role..."
+                          : "Please wait while other players perform their actions"}
                     </p>
                     
                     {canPerformAction ? (

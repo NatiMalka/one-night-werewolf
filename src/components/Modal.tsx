@@ -45,14 +45,14 @@ const Modal: React.FC<ModalProps> = ({
     sm: 'max-w-md',
     md: 'max-w-lg',
     lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    '2xl': 'max-w-6xl'
+    xl: 'max-w-3xl',
+    '2xl': 'max-w-5xl'
   };
   
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center
-                 bg-black bg-opacity-50 p-4 transition-opacity duration-300
+                 bg-black bg-opacity-50 p-2 transition-opacity duration-300
                  ${isOpen ? 'opacity-100' : 'opacity-0'}`}
       onClick={handleOverlayClick}
       aria-hidden={!isOpen}
@@ -65,21 +65,21 @@ const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-labelledby="modal-title"
       >
-        <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-          <h3 id="modal-title" className="text-xl font-semibold">{title}</h3>
+        <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center">
+          <h3 id="modal-title" className="text-lg font-semibold">{title}</h3>
           <button
             type="button"
             onClick={onClose}
             className="text-gray-400 hover:text-white focus:outline-none"
             aria-label="Close"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
         
-        <div className="px-6 py-4">{children}</div>
+        <div className="px-4 py-3">{children}</div>
       </div>
     </div>
   );

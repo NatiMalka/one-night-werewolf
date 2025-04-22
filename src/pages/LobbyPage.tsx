@@ -194,6 +194,14 @@ const LobbyPage: React.FC = () => {
                     <p className="text-gray-300">
                       You are the host. Wait for all players to ready up, then start the game.
                     </p>
+                    {canStartGame && (
+                      <p className="text-green-400 mt-2 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Ready to start! Click the Start Game button when you're ready.
+                      </p>
+                    )}
                   </div>
                   
                   <div>
@@ -277,7 +285,7 @@ const LobbyPage: React.FC = () => {
                       fullWidth
                       disabled={!canStartGame}
                       onClick={handleStartGame}
-                      className={`py-3 text-lg transition-all transform ${canStartGame ? 'hover:translate-y-[-2px] shadow-lg hover:shadow-xl' : 'opacity-70 cursor-not-allowed'}`}
+                      className={`py-3 text-lg transition-all transform ${canStartGame ? 'hover:translate-y-[-2px] shadow-lg hover:shadow-xl bg-purple-600 hover:bg-purple-700' : 'opacity-70 cursor-not-allowed'}`}
                     >
                       <span className="flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -287,6 +295,17 @@ const LobbyPage: React.FC = () => {
                         Start Game
                       </span>
                     </Button>
+                    
+                    {canStartGame && (
+                      <div className="bg-purple-900/30 border border-purple-700/30 rounded-lg p-3 text-center">
+                        <p className="text-purple-300 text-sm flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Clicking Start Game will open role selection
+                        </p>
+                      </div>
+                    )}
                     
                     {!canStartGame && playerCount < 3 && (
                       <div className="bg-red-900/30 border border-red-700/30 rounded-lg p-3 text-center">
@@ -411,12 +430,32 @@ const LobbyPage: React.FC = () => {
         </div>
       </div>
       
-      {showRoleSelection && (
-        <RoleSelection
-          playerCount={playerCount}
-          onComplete={handleRoleSelectionComplete}
-        />
-      )}
+      {/* Role Selection Modal */}
+      <Modal
+        isOpen={showRoleSelection}
+        onClose={() => setShowRoleSelection(false)}
+        title="Select Game Roles"
+        size="xl"
+      >
+        <div className="mb-4">
+          <div className="bg-indigo-900/30 border border-indigo-700/30 rounded-lg p-3 mb-4">
+            <p className="text-indigo-300 font-medium flex items-center mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Select Roles
+            </p>
+            <p className="text-gray-300 text-sm">
+              Choose {playerCount} player cards + 3 center cards, then click "Start Game".
+            </p>
+          </div>
+          
+          <RoleSelection
+            playerCount={playerCount}
+            onComplete={handleRoleSelectionComplete}
+          />
+        </div>
+      </Modal>
       
       {/* Kick confirmation modal */}
       <Modal

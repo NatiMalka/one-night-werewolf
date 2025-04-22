@@ -93,10 +93,10 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
   });
 
   return (
-    <div className={`bg-gray-900 rounded-lg shadow-lg p-6 ${className}`}>
-      <h2 className="text-2xl font-bold text-white mb-4">Select Roles</h2>
+    <div className={`bg-gray-900 rounded-lg shadow-lg p-4 ${className}`}>
+      <h2 className="text-xl font-bold text-white mb-3">Select Roles</h2>
       
-      <div className="mb-4">
+      <div className="mb-3">
         <div className="flex justify-between text-sm text-gray-400">
           <span>Selected: {totalSelected} / {totalCards}</span>
           <span>{playerCount} players + 3 center cards</span>
@@ -116,7 +116,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
         </div>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
         {sortedRoles.map((roleKey) => {
           const role = roleKey as Role;
           const { name, team, description } = roleData[role];
@@ -130,25 +130,25 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
           return (
             <div 
               key={role}
-              className={`border rounded-lg p-3 ${teamColors[team]}`}
+              className={`border rounded-lg p-1.5 ${teamColors[team]}`}
             >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="font-semibold text-white">{name}</h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-opacity-80 text-white
+              <div className="flex justify-between items-center mb-1">
+                <h3 className="font-semibold text-white text-xs">{name}</h3>
+                <span className="text-xs px-1 py-0.5 rounded-full bg-opacity-80 text-white
                                 ${team === 'werewolf' ? 'bg-red-700' :
                                   team === 'village' ? 'bg-blue-700' : 'bg-amber-700'}">
                   {team.charAt(0).toUpperCase() + team.slice(1)}
                 </span>
               </div>
               
-              <p className="text-sm text-gray-300 mb-3">{description}</p>
+              <p className="text-xs text-gray-300 mb-1 line-clamp-2 h-8" title={description}>{description}</p>
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleRoleChange(role, -1)}
                     disabled={counts[role] === 0}
-                    className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center
+                    className="w-5 h-5 rounded-full bg-gray-800 text-white flex items-center justify-center
                               disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
                   >
                     -
@@ -158,7 +158,7 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
                   
                   <button
                     onClick={() => handleRoleChange(role, 1)}
-                    className="w-8 h-8 rounded-full bg-gray-800 text-white flex items-center justify-center
+                    className="w-5 h-5 rounded-full bg-gray-800 text-white flex items-center justify-center
                               hover:bg-gray-700"
                   >
                     +
@@ -170,9 +170,10 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
         })}
       </div>
       
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-2">
         <Button
           variant="ghost"
+          size="sm"
           onClick={() => {
             // Reset to default selection
             const initial = {
@@ -204,10 +205,28 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
         <Button
           disabled={totalSelected !== totalCards}
           onClick={() => onComplete(selectedRoles)}
+          className={`bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 text-base shadow-lg transition-all transform hover:translate-y-[-2px] ${totalSelected === totalCards ? '' : 'opacity-70 cursor-not-allowed'}`}
         >
-          Start Game
+          <span className="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Start Game
+          </span>
         </Button>
       </div>
+      
+      {totalSelected === totalCards && (
+        <div className="mt-2 bg-green-900/30 border border-green-700/30 rounded-lg p-2 text-center">
+          <p className="text-green-400 text-xs flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Ready to start the game!
+          </p>
+        </div>
+      )}
     </div>
   );
 };

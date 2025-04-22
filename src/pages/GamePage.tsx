@@ -187,6 +187,7 @@ const GamePage: React.FC = () => {
   
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
+  const [roleShownAtNightStart, setRoleShownAtNightStart] = useState(false);
   
   // Add toast notification state
   const [toast, setToast] = useState<string | null>(null);
@@ -204,12 +205,26 @@ const GamePage: React.FC = () => {
     onConfirm: () => {},
   });
   
-  // Show role modal automatically when game starts
+  // Show role modal automatically when night phase begins
   useEffect(() => {
-    if (gameRoom?.phase === 'night' && currentPlayer?.originalRole) {
+    if (gameRoom?.phase === 'night' && currentPlayer?.originalRole && !roleShownAtNightStart) {
       setShowRoleModal(true);
+      setRoleShownAtNightStart(true);
+      
+      // Set a timer to auto-close the role modal after 5 seconds for regular players, 10 seconds for host
+      const displayTime = currentPlayer?.isHost ? 10000 : 5000;
+      const timer = setTimeout(() => {
+        setShowRoleModal(false);
+      }, displayTime);
+      
+      return () => clearTimeout(timer);
     }
-  }, [gameRoom?.phase, currentPlayer?.originalRole]);
+    
+    // Reset the flag when game phase changes
+    if (gameRoom?.phase !== 'night') {
+      setRoleShownAtNightStart(false);
+    }
+  }, [gameRoom?.phase, currentPlayer?.originalRole, roleShownAtNightStart, currentPlayer?.isHost]);
   
   // Inject CSS styles for vote animations when component mounts
   useEffect(() => {
@@ -255,6 +270,14 @@ const GamePage: React.FC = () => {
     gameRoom.currentNightAction && 
     originalRole && 
     roleData[originalRole as Role].nightAction === gameRoom.currentNightAction;
+    
+  // Check if the role allows player to view their card during the night
+  const canViewRoleDuringNight = 
+    originalRole === 'seer' || 
+    originalRole === 'robber' || 
+    originalRole === 'troublemaker' || 
+    originalRole === 'insomniac' ||
+    currentPlayer.isHost;
   
   // Helper function to show confirmation modals
   const showConfirmation = (title: string, message: string, onConfirm: () => void) => {
@@ -457,22 +480,24 @@ const GamePage: React.FC = () => {
           {/* Controls Column */}
           <div className="space-y-6">
             {/* View Role Button */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-purple-800/30 p-6">
-              <Button 
-                variant="ghost" 
-                fullWidth 
-                onClick={() => setShowRoleModal(true)}
-                className="bg-purple-900/50 hover:bg-purple-800/70 text-white border border-purple-700/50 shadow-inner py-4 text-lg"
-              >
-                <span className="flex items-center justify-center">
-                  <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  View Your Role
-                </span>
-              </Button>
-            </div>
+            {(gameRoom.phase === 'results' || (gameRoom.phase === 'night' && canViewRoleDuringNight)) && (
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-purple-800/30 p-6">
+                <Button 
+                  variant="ghost" 
+                  fullWidth 
+                  onClick={() => setShowRoleModal(true)}
+                  className="bg-purple-900/50 hover:bg-purple-800/70 text-white border border-purple-700/50 shadow-inner py-4 text-lg"
+                >
+                  <span className="flex items-center justify-center">
+                    <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View Your Role
+                  </span>
+                </Button>
+              </div>
+            )}
             
             {/* Night Sequence Visualization */}
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
@@ -652,23 +677,25 @@ const GamePage: React.FC = () => {
               />
             </div>
             
-            {/* View Role Button */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30 p-5">
-              <Button 
-                variant="ghost" 
-                fullWidth 
-                onClick={() => setShowRoleModal(true)}
-                className="bg-blue-900/50 hover:bg-blue-800/70 text-white border border-blue-700/50 shadow-inner py-3"
-              >
-                <span className="flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  View Your Role
-                </span>
-              </Button>
-            </div>
+            {/* View Role Button - Only for host */}
+            {currentPlayer.isHost && (
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30 p-5">
+                <Button 
+                  variant="ghost" 
+                  fullWidth 
+                  onClick={() => setShowRoleModal(true)}
+                  className="bg-blue-900/50 hover:bg-blue-800/70 text-white border border-blue-700/50 shadow-inner py-3"
+                >
+                  <span className="flex items-center justify-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View Your Role (Host Only)
+                  </span>
+                </Button>
+              </div>
+            )}
             
             {/* Host Controls - Only shown to host */}
             {currentPlayer.isHost && (
@@ -1613,6 +1640,63 @@ const GamePage: React.FC = () => {
             </p>
             
             <p className="text-gray-300 text-xl mb-8 leading-relaxed">{description}</p>
+            
+            {gameRoom.phase === 'night' && roleShownAtNightStart && (
+              <div className="bg-yellow-900/40 p-5 border border-yellow-700/30 rounded-lg w-full mb-6">
+                <p className="text-yellow-300 font-semibold flex items-center mb-2">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Remember Your Role
+                </p>
+                <p className="text-gray-300">
+                  Memorize your role now! In One Night Werewolf, you only see your role at the beginning of the night.
+                </p>
+                {!canViewRoleDuringNight && !currentPlayer.isHost && (
+                  <p className="text-yellow-400 mt-2 text-sm">
+                    This window will close automatically, and you won't be able to see your role again until the results phase.
+                  </p>
+                )}
+                {canViewRoleDuringNight && !currentPlayer.isHost && (
+                  <p className="text-yellow-400 mt-2 text-sm">
+                    Since you have a special role, you'll be able to view your card again during the night phase.
+                  </p>
+                )}
+                {currentPlayer.isHost && (
+                  <p className="text-yellow-400 mt-2 text-sm">
+                    As the host, you can view your role at any time during the night phase.
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {gameRoom.phase === 'day' && currentPlayer.isHost && (
+              <div className="bg-blue-900/40 p-5 border border-blue-700/30 rounded-lg w-full mb-6">
+                <p className="text-blue-300 font-semibold flex items-center mb-2">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Host View
+                </p>
+                <p className="text-gray-300">
+                  As the host, you can view roles during the day phase. Regular players only see their roles at the beginning of the night and during the results phase.
+                </p>
+              </div>
+            )}
+            
+            {gameRoom.phase === 'results' && currentPlayer.isHost && (
+              <div className="bg-blue-900/40 p-5 border border-blue-700/30 rounded-lg w-full mb-6">
+                <p className="text-blue-300 font-semibold flex items-center mb-2">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Host View
+                </p>
+                <p className="text-gray-300">
+                  As the host, you can see your final role. All players can now see their final roles during the results phase.
+                </p>
+              </div>
+            )}
             
             {originalRole === 'robber' && currentPlayer.robbedRole && (
               <div className="bg-gray-800 p-5 rounded-lg w-full mb-6">

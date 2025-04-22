@@ -4,6 +4,15 @@ import Button from '../components/Button';
 import { ArrowRight, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+interface Star {
+  id: number;
+  top: string;
+  left: string;
+  size: number;
+  delay: string;
+  opacity: number;
+}
+
 const HomePage: React.FC = () => {
   const { createRoom, joinRoom, isLoading, error: contextError } = useGame();
   const [playerName, setPlayerName] = useState('');
@@ -11,11 +20,46 @@ const HomePage: React.FC = () => {
   const [joinMode, setJoinMode] = useState<'create' | 'join'>('create');
   const [localError, setLocalError] = useState<string | null>(null);
   const [animateIn, setAnimateIn] = useState(false);
+  const [shootingStars, setShootingStars] = useState<{id: number, top: string, left: string, delay: string}[]>([]);
+  const [stars, setStars] = useState<Star[]>([]);
   const navigate = useNavigate();
   
   useEffect(() => {
     // Trigger entrance animation
     setAnimateIn(true);
+    
+    // Generate fixed stars on mount
+    const fixedStars: Star[] = [];
+    for (let i = 0; i < 40; i++) {
+      fixedStars.push({
+        id: i,
+        size: Math.random() * 3 + 1,
+        top: `${Math.random() * 100}%`,
+        left: `${Math.random() * 100}%`,
+        delay: `${Math.random() * 3}s`,
+        opacity: Math.random() * 0.7 + 0.3
+      });
+    }
+    setStars(fixedStars);
+    
+    // Create occasional shooting stars
+    const shootingStarInterval = setInterval(() => {
+      const newStar = {
+        id: Date.now(),
+        top: `${Math.random() * 50}%`,
+        left: `${Math.random() * 70 + 20}%`,
+        delay: `${Math.random()}s`
+      };
+      
+      setShootingStars(prev => [...prev, newStar]);
+      
+      // Remove star after animation completes
+      setTimeout(() => {
+        setShootingStars(prev => prev.filter(star => star.id !== newStar.id));
+      }, 4000);
+    }, 5000);
+    
+    return () => clearInterval(shootingStarInterval);
   }, []);
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,8 +100,43 @@ const HomePage: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-950 via-indigo-950 to-gray-950 flex flex-col overflow-hidden relative">
-      {/* Animated background elements */}
+      {/* Stars in the background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* Fixed twinkling stars */}
+        {stars.map(star => (
+          <div 
+            key={star.id}
+            className="absolute rounded-full bg-white animate-twinkle"
+            style={{
+              top: star.top,
+              left: star.left,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              opacity: star.opacity,
+              animationDelay: star.delay,
+              boxShadow: `0 0 ${star.size * 2}px ${star.size / 2}px rgba(255, 255, 255, ${star.opacity})`
+            }}
+          />
+        ))}
+        
+        {/* Shooting stars */}
+        {shootingStars.map(star => (
+          <div 
+            key={star.id}
+            className="absolute animate-shooting-star"
+            style={{
+              top: star.top,
+              left: star.left,
+              animationDelay: star.delay
+            }}
+          >
+            <div className="w-20 h-px bg-gradient-to-r from-transparent via-white to-transparent transform -rotate-45">
+              <div className="absolute w-1.5 h-1.5 bg-white rounded-full -left-1 -top-1 opacity-100"></div>
+            </div>
+          </div>
+        ))}
+        
+        {/* Animated background blobs */}
         <div className="absolute top-0 left-[10%] w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute top-0 right-[20%] w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-1/4 left-[30%] w-80 h-80 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-4000"></div>

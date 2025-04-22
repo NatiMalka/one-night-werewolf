@@ -401,8 +401,9 @@ class FirebaseGameService {
         if (snapshot.exists()) {
           const roomData = snapshot.val();
           const players = Object.values(roomData.players) as Player[];
+          const centerCards = roomData.centerCards || [];
           
-          // Count votes for each player
+          // Count votes for each player and center card
           const voteCounts: Record<string, number> = {};
           players.forEach(player => {
             if (player.votedFor) {
@@ -410,19 +411,22 @@ class FirebaseGameService {
             }
           });
           
-          // Determine which players were eliminated (highest vote count)
+          // Determine which players/cards were eliminated (highest vote count)
           const maxVotes = Math.max(...Object.values(voteCounts), 0);
-          const eliminatedPlayerIds = Object.keys(voteCounts).filter(
+          const eliminatedIds = Object.keys(voteCounts).filter(
             id => voteCounts[id] === maxVotes
           );
           
-          // Check for Hunter role among eliminated
+          // Check for Hunter role among eliminated players
           let hunterVictimId: string | null = null;
-          for (const id of eliminatedPlayerIds) {
-            const player = players.find(p => p.id === id);
-            if (player && player.currentRole === 'hunter') {
-              // If hunter is eliminated, find who they voted for
-              hunterVictimId = player.votedFor || null;
+          for (const id of eliminatedIds) {
+            // Only check actual players, not center cards
+            if (!id.startsWith('center-')) {
+              const player = players.find(p => p.id === id);
+              if (player && player.currentRole === 'hunter') {
+                // If hunter is eliminated, find who they voted for
+                hunterVictimId = player.votedFor || null;
+              }
             }
           }
           
@@ -430,18 +434,32 @@ class FirebaseGameService {
           let winningTeam: 'village' | 'werewolf' | 'tanner' | undefined;
           
           // Tanner check first - if tanner is eliminated, tanner wins
-          const tannerWins = eliminatedPlayerIds.some(id => {
-            const player = players.find(p => p.id === id);
-            return player && player.currentRole === 'tanner';
+          const tannerWins = eliminatedIds.some(id => {
+            if (id.startsWith('center-')) {
+              // Check if the center card is a tanner
+              const cardIndex = parseInt(id.replace('center-', '')) - 1;
+              return centerCards[cardIndex]?.role === 'tanner';
+            } else {
+              // Check if the player is a tanner
+              const player = players.find(p => p.id === id);
+              return player && player.currentRole === 'tanner';
+            }
           });
           
           if (tannerWins) {
             winningTeam = 'tanner';
           } else {
-            // Check if any werewolf was eliminated
-            const werewolfEliminated = eliminatedPlayerIds.some(id => {
-              const player = players.find(p => p.id === id);
-              return player && player.currentRole === 'werewolf';
+            // Check if any werewolf was eliminated (player or center card)
+            const werewolfEliminated = eliminatedIds.some(id => {
+              if (id.startsWith('center-')) {
+                // Check if the center card is a werewolf
+                const cardIndex = parseInt(id.replace('center-', '')) - 1;
+                return centerCards[cardIndex]?.role === 'werewolf';
+              } else {
+                // Check if the player is a werewolf
+                const player = players.find(p => p.id === id);
+                return player && player.currentRole === 'werewolf';
+              }
             });
             
             // If any werewolf was eliminated, village wins
@@ -453,7 +471,7 @@ class FirebaseGameService {
           return update(ref(database, `rooms/${roomCode}`), {
             phase: 'results',
             winningTeam: winningTeam,
-            eliminatedPlayerIds: eliminatedPlayerIds,
+            eliminatedPlayerIds: eliminatedIds,
             hunterVictimId: hunterVictimId,
             voteCounts: voteCounts,
             antiCache: this.getAntiCacheParam()

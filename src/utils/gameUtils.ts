@@ -1,4 +1,4 @@
-import { Role, Team, Player, GameRoom, NightAction } from '../types';
+import { Role, Team, Player, GameRoom, NightAction, CenterCard } from '../types';
 
 // Defining role characteristics
 export const roleData: Record<Role, { 
@@ -125,16 +125,27 @@ export const getPlayersByRole = (players: Player[], role: Role): Player[] => {
 };
 
 // Check if the village team won
-export const didVillageWin = (players: Player[], voteCounts: Record<string, number>): boolean => {
+export const didVillageWin = (players: Player[], voteCounts: Record<string, number>, centerCards?: CenterCard[]): boolean => {
   // Find the player(s) with the most votes
   const maxVotes = Math.max(...Object.values(voteCounts));
   const votedOutIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
   
-  // Check if any voted out player is a werewolf
+  // Check if any voted out player or center card is a werewolf
   for (const id of votedOutIds) {
-    const player = players.find(p => p.id === id);
-    if (player && player.currentRole === 'werewolf') {
-      return true;
+    if (id.startsWith('center-') && centerCards) {
+      // Check center cards
+      const centerIndex = parseInt(id.replace('center-', '')) - 1;
+      if (centerIndex >= 0 && centerIndex < centerCards.length) {
+        if (centerCards[centerIndex].role === 'werewolf') {
+          return true;
+        }
+      }
+    } else {
+      // Check players
+      const player = players.find(p => p.id === id);
+      if (player && player.currentRole === 'werewolf') {
+        return true;
+      }
     }
   }
   
@@ -142,16 +153,27 @@ export const didVillageWin = (players: Player[], voteCounts: Record<string, numb
 };
 
 // Check if the werewolf team won
-export const didWerewolfWin = (players: Player[], voteCounts: Record<string, number>): boolean => {
+export const didWerewolfWin = (players: Player[], voteCounts: Record<string, number>, centerCards?: CenterCard[]): boolean => {
   // Find the player(s) with the most votes
   const maxVotes = Math.max(...Object.values(voteCounts));
   const votedOutIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
   
-  // Check if no werewolf was voted out
+  // Check if no werewolf was voted out (neither player nor center card)
   for (const id of votedOutIds) {
-    const player = players.find(p => p.id === id);
-    if (player && player.currentRole === 'werewolf') {
-      return false;
+    if (id.startsWith('center-') && centerCards) {
+      // Check center cards
+      const centerIndex = parseInt(id.replace('center-', '')) - 1;
+      if (centerIndex >= 0 && centerIndex < centerCards.length) {
+        if (centerCards[centerIndex].role === 'werewolf') {
+          return false; // A werewolf center card was found, werewolves lose
+        }
+      }
+    } else {
+      // Check players
+      const player = players.find(p => p.id === id);
+      if (player && player.currentRole === 'werewolf') {
+        return false; // A werewolf player was found, werewolves lose
+      }
     }
   }
   
@@ -159,16 +181,27 @@ export const didWerewolfWin = (players: Player[], voteCounts: Record<string, num
 };
 
 // Check if the tanner won
-export const didTannerWin = (players: Player[], voteCounts: Record<string, number>): boolean => {
+export const didTannerWin = (players: Player[], voteCounts: Record<string, number>, centerCards?: CenterCard[]): boolean => {
   // Find the player(s) with the most votes
   const maxVotes = Math.max(...Object.values(voteCounts));
   const votedOutIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
   
-  // Check if any tanner was voted out
+  // Check if any tanner was voted out (player or center card)
   for (const id of votedOutIds) {
-    const player = players.find(p => p.id === id);
-    if (player && player.currentRole === 'tanner') {
-      return true;
+    if (id.startsWith('center-') && centerCards) {
+      // Check center cards
+      const centerIndex = parseInt(id.replace('center-', '')) - 1;
+      if (centerIndex >= 0 && centerIndex < centerCards.length) {
+        if (centerCards[centerIndex].role === 'tanner') {
+          return true;
+        }
+      }
+    } else {
+      // Check players
+      const player = players.find(p => p.id === id);
+      if (player && player.currentRole === 'tanner') {
+        return true;
+      }
     }
   }
   
@@ -214,13 +247,14 @@ export const getNextNightAction = (room: GameRoom): NightAction | undefined => {
 // Get the determined winning team
 export const determineWinningTeam = (
   players: Player[], 
-  voteCounts: Record<string, number>
+  voteCounts: Record<string, number>,
+  centerCards?: CenterCard[]
 ): Team | undefined => {
-  if (didTannerWin(players, voteCounts)) {
+  if (didTannerWin(players, voteCounts, centerCards)) {
     return 'tanner';
-  } else if (didVillageWin(players, voteCounts)) {
+  } else if (didVillageWin(players, voteCounts, centerCards)) {
     return 'village';
-  } else if (didWerewolfWin(players, voteCounts)) {
+  } else if (didWerewolfWin(players, voteCounts, centerCards)) {
     return 'werewolf';
   }
   

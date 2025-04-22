@@ -213,8 +213,6 @@ const GamePage: React.FC = () => {
   
   // Inject CSS styles for vote animations when component mounts
   useEffect(() => {
-    if (!gameRoom || !currentPlayer) return;
-    
     // Create style element
     const styleEl = document.createElement('style');
     styleEl.type = 'text/css';
@@ -235,16 +233,17 @@ const GamePage: React.FC = () => {
     };
   }, []);
   
+  // Redirect to lobby page if game phase is lobby
+  useEffect(() => {
+    // Only redirect if we have a gameRoom and it's in lobby phase
+    if (gameRoom?.phase === 'lobby') {
+      window.location.href = `/room/${gameRoom.code}`;
+    }
+  }, [gameRoom?.phase, gameRoom?.code]);
+  
   if (!gameRoom || !currentPlayer) {
     return null;
   }
-  
-  // Redirect to lobby page if game phase is lobby
-  useEffect(() => {
-    if (gameRoom.phase === 'lobby') {
-      window.location.href = `/room/${gameRoom.code}`;
-    }
-  }, [gameRoom.phase, gameRoom.code]);
   
   // Get current player's role information
   const currentRole = currentPlayer.currentRole || 'villager';
@@ -742,18 +741,28 @@ const GamePage: React.FC = () => {
     const totalPlayers = gameRoom.players.length;
     
     // Handle vote function with toast notification
-    const handleVote = (playerId: string) => {
-      // Get the player name
-      const targetPlayer = gameRoom.players.find(p => p.id === playerId);
+    const handleVote = (targetId: string) => {
+      // Check if voting for player or center card
+      const isPlayerVote = !targetId.startsWith('center-');
+      
+      // Get the target name (player name or center card number)
+      let targetName = "Unknown";
+      if (isPlayerVote) {
+        const targetPlayer = gameRoom.players.find(p => p.id === targetId);
+        targetName = targetPlayer?.name || "Unknown";
+      } else {
+        const centerIndex = parseInt(targetId.replace('center-', ''));
+        targetName = `Center Card ${centerIndex}`;
+      }
       
       // Show confirmation modal before voting
       showConfirmation(
         "Confirm Your Vote",
-        `Are you sure you want to vote for ${targetPlayer?.name}? You cannot change your vote once submitted.`,
+        `Are you sure you want to vote for ${targetName}? You cannot change your vote once submitted.`,
         async () => {
-          await votePlayer(playerId);
+          await votePlayer(targetId);
           // Show toast notification after voting
-          setToast(`You voted for ${targetPlayer?.name}. Waiting for other players to vote.`);
+          setToast(`You voted for ${targetName}. Waiting for other players to vote.`);
         }
       );
     };
@@ -806,7 +815,7 @@ const GamePage: React.FC = () => {
         </div>
         
         {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Vote Selection Panel - Takes up more space */}
           <div className="md:col-span-2">
             <div className="bg-gradient-to-br from-gray-900/90 to-indigo-900/80 rounded-xl shadow-2xl overflow-hidden border border-indigo-900/30">
@@ -828,9 +837,75 @@ const GamePage: React.FC = () => {
                 <p className="text-gray-300 mb-6">
                   {hasVoted 
                     ? "You've cast your vote. Wait for other players to vote."
-                    : "Select a player you think is a werewolf. Choose carefully!"}
+                    : "Select a player or center card you think is a werewolf. Choose carefully!"}
                 </p>
                 
+                {/* Center cards section */}
+                <div className="mb-8">
+                  <h4 className="text-lg font-semibold text-indigo-300 mb-3 flex items-center">
+                    <span className="mr-2">🃏</span> Center Cards
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                    {gameRoom.centerCards.map((card, index) => {
+                      const cardId = `center-${index + 1}`;
+                      const isVotedFor = currentPlayer.votedFor === cardId;
+                      const voteCount = playerVotes ? playerVotes[cardId] || 0 : 0;
+                      
+                      return (
+                        <div 
+                          key={cardId}
+                          className={`relative group rounded-lg overflow-hidden transition-all duration-300 transform ${
+                            hasVoted ? 'cursor-default' : 'cursor-pointer hover:scale-103 hover:-translate-y-1'
+                          } ${
+                            isVotedFor 
+                              ? 'bg-gradient-to-br from-purple-900 to-indigo-900 border-2 border-purple-500/70 shadow-lg shadow-purple-500/20' 
+                              : 'bg-gray-800/80 border border-gray-700/50 hover:border-indigo-700/70'
+                          }`}
+                          onClick={() => !hasVoted && handleVote(cardId)}
+                        >
+                          {/* Glowing effect on hover */}
+                          <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 ${hasVoted ? 'hidden' : ''}`}></div>
+                          
+                          <div className="flex items-center p-4">
+                            <div className="mr-3">
+                              <Card 
+                                isCenterCard={true}
+                                size="sm"
+                              />
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="text-lg font-semibold text-white mb-1">Center {index + 1}</div>
+                              
+                              {gameRoom.phase === 'voting' && voteCount > 0 && (
+                                <div className="flex items-center">
+                                  <div className="text-sm bg-red-900/40 text-red-300 px-2 py-0.5 rounded-full">
+                                    {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {!hasVoted ? (
+                              <div className="w-8 h-8 rounded-full bg-gray-700/70 flex items-center justify-center border border-gray-600/50 group-hover:bg-indigo-800 group-hover:border-indigo-600 transition-colors">
+                                <CheckCircle size={16} className="text-gray-400 group-hover:text-white transition-colors" />
+                              </div>
+                            ) : isVotedFor ? (
+                              <div className="w-8 h-8 rounded-full bg-green-900/70 flex items-center justify-center border border-green-600/70">
+                                <CheckCircle size={16} className="text-green-300" />
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                
+                {/* Players section */}
+                <h4 className="text-lg font-semibold text-indigo-300 mb-3 flex items-center">
+                  <span className="mr-2">👤</span> Players
+                </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
                   {gameRoom.players.map(player => {
                     // Skip current player as they can't vote for themselves
@@ -854,7 +929,7 @@ const GamePage: React.FC = () => {
                         {/* Glowing effect on hover */}
                         <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-300 bg-gradient-to-r from-indigo-600 to-purple-600 ${hasVoted ? 'hidden' : ''}`}></div>
                         
-                        <div className="relative p-4 flex items-center">
+                        <div className="flex items-center p-4">
                           <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mr-3 border-2 border-gray-600 overflow-hidden">
                             <div className="text-xl font-bold text-white">{player.name.charAt(0).toUpperCase()}</div>
                           </div>
@@ -885,7 +960,7 @@ const GamePage: React.FC = () => {
                     );
                   })}
                 </div>
-                
+
                 {playerVotes && Object.keys(playerVotes).length > 0 && (
                   <div className="mt-8 bg-gray-800/70 backdrop-blur rounded-lg p-5 border border-indigo-900/30">
                     <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
@@ -893,14 +968,53 @@ const GamePage: React.FC = () => {
                     </h4>
                     
                     <div className="space-y-4">
+                      {/* Center cards votes */}
+                      {gameRoom.centerCards.map((card, index) => {
+                        const cardId = `center-${index + 1}`;
+                        const voteCount = playerVotes[cardId] || 0;
+                        const percentage = totalPlayers > 0 ? (voteCount / totalPlayers) * 100 : 0;
+                        
+                        if (voteCount === 0) return null; // Only show cards that have votes
+                        
+                        return (
+                          <div key={cardId} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-indigo-300 font-medium flex items-center">
+                                <span className="mr-2">🃏</span>
+                                Center Card {index + 1}
+                              </span>
+                              <span className="text-gray-400">{voteCount} {voteCount === 1 ? 'vote' : 'votes'}</span>
+                            </div>
+                            <div className="relative w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 transition-all duration-500 ease-out"
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Divider if both center cards and players have votes */}
+                      {gameRoom.centerCards.some((_, index) => playerVotes[`center-${index + 1}`] > 0) && 
+                       gameRoom.players.some(player => playerVotes[player.id] > 0) && (
+                        <div className="border-t border-gray-700 my-3"></div>
+                      )}
+                      
+                      {/* Player votes */}
                       {gameRoom.players.map(player => {
                         const voteCount = playerVotes[player.id] || 0;
                         const percentage = totalPlayers > 0 ? (voteCount / totalPlayers) * 100 : 0;
                         
+                        if (voteCount === 0) return null; // Only show players that have votes
+                        
                         return (
                           <div key={player.id} className="space-y-1">
                             <div className="flex justify-between text-sm">
-                              <span className="text-white font-medium">{player.name}</span>
+                              <span className="text-white font-medium flex items-center">
+                                <span className="mr-2">👤</span>
+                                {player.name}
+                              </span>
                               <span className="text-gray-400">{voteCount} {voteCount === 1 ? 'vote' : 'votes'}</span>
                             </div>
                             <div className="relative w-full h-3 bg-gray-700 rounded-full overflow-hidden">
@@ -912,6 +1026,11 @@ const GamePage: React.FC = () => {
                           </div>
                         );
                       })}
+                      
+                      {/* Show a message if no votes have been cast yet */}
+                      {!Object.values(playerVotes).some(count => count > 0) && (
+                        <p className="text-gray-400 text-center py-2">No votes cast yet</p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1044,11 +1163,25 @@ const GamePage: React.FC = () => {
   
   // Render for Results Phase
   const renderResultsPhase = () => {
-    // Find eliminated players
+    // Find eliminated players and center cards
     const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
+    
+    // Separate player IDs from center card IDs
+    const eliminatedPlayerIds = eliminatedIds.filter(id => !id.startsWith('center-'));
+    const eliminatedCenterCardIds = eliminatedIds.filter(id => id.startsWith('center-'));
+    
     const eliminatedPlayers = gameRoom.players.filter(player => 
-      eliminatedIds.includes(player.id)
+      eliminatedPlayerIds.includes(player.id)
     );
+    
+    const eliminatedCenterCards = eliminatedCenterCardIds.map(id => {
+      const index = parseInt(id.replace('center-', '')) - 1;
+      return {
+        id,
+        card: gameRoom.centerCards[index],
+        index: index + 1
+      };
+    });
     
     // Find hunter victim if any
     const hunterVictim = gameRoom.hunterVictimId 
@@ -1088,13 +1221,14 @@ const GamePage: React.FC = () => {
         
         {/* Main Content */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Eliminated Players Section */}
+          {/* Eliminated Section */}
           <div className="md:col-span-1">
+            {/* Eliminated Players Section */}
             {eliminatedPlayers.length > 0 && (
               <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden mb-8">
                 <div className="bg-red-900/30 px-6 py-4 border-b border-red-900/50">
                   <h3 className="text-2xl font-bold text-white flex items-center">
-                    <span className="mr-2">☠️</span> Eliminated
+                    <span className="mr-2">☠️</span> Eliminated Players
                   </h3>
                 </div>
                 
@@ -1111,7 +1245,7 @@ const GamePage: React.FC = () => {
                           />
                         </div>
                         
-                        <div className="flex-1">
+                        <div>
                           <h4 className="text-xl font-semibold text-white mb-1">{player.name}</h4>
                           <p className={`text-lg font-medium ${
                             player.currentRole === 'werewolf' ? 'text-red-400' : 
@@ -1163,11 +1297,56 @@ const GamePage: React.FC = () => {
                 </div>
               </div>
             )}
+            
+            {/* Eliminated Center Cards Section */}
+            {eliminatedCenterCards.length > 0 && (
+              <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden mb-8">
+                <div className="bg-purple-900/30 px-6 py-4 border-b border-purple-900/50">
+                  <h3 className="text-2xl font-bold text-white flex items-center">
+                    <span className="mr-2">🃏</span> Eliminated Center Cards
+                  </h3>
+                </div>
+                
+                <div className="p-6">
+                  <div className="space-y-6">
+                    {eliminatedCenterCards.map(({ id, card, index }) => (
+                      <div key={id} className="flex items-center gap-4 bg-gray-700/50 p-4 rounded-lg border border-gray-600/50">
+                        <div className="w-[120px] flex-shrink-0">
+                          <Card 
+                            role={card.role}
+                            isRevealed={true}
+                            size="md"
+                            hideDescription={true}
+                          />
+                        </div>
+                        
+                        <div>
+                          <h4 className="text-xl font-semibold text-white mb-1">Center Card {index}</h4>
+                          <p className={`text-lg font-medium ${
+                            card.role === 'werewolf' ? 'text-red-400' : 
+                            card.role === 'tanner' ? 'text-amber-400' :
+                            'text-blue-400'
+                          }`}>
+                            {card.role.charAt(0).toUpperCase() + card.role.slice(1)}
+                          </p>
+                          
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="bg-red-900/50 text-red-200 text-sm px-2 py-1 rounded">
+                              {gameRoom.voteCounts ? gameRoom.voteCounts[id] || 0 : 0} votes
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Final Roles Section */}
           <div className="md:col-span-2">
-            <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden">
+            <div className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden mb-8">
               <div className="bg-indigo-900/30 px-6 py-4 border-b border-indigo-900/50">
                 <h3 className="text-2xl font-bold text-white flex items-center">
                   <span className="mr-2">🎭</span> Final Roles
@@ -1175,7 +1354,11 @@ const GamePage: React.FC = () => {
               </div>
               
               <div className="p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {/* Players Final Roles */}
+                <h4 className="text-xl font-semibold text-indigo-300 mb-4 flex items-center">
+                  <span className="mr-2">👥</span> Players
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
                   {gameRoom.players.map(player => {
                     const voteCount = gameRoom.voteCounts ? gameRoom.voteCounts[player.id] || 0 : 0;
                     const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
@@ -1223,7 +1406,7 @@ const GamePage: React.FC = () => {
                               />
                             </div>
                             
-                            <p className={`text-center font-semibold text-lg ${
+                            <p className={`text-center font-semibold ${
                               player.currentRole === 'werewolf' ? 'text-red-400' : 
                               player.currentRole === 'tanner' ? 'text-amber-400' :
                               'text-blue-400'
@@ -1247,9 +1430,87 @@ const GamePage: React.FC = () => {
                               {player.votedFor && (
                                 <p className="text-sm text-gray-400 flex justify-between">
                                   <span>Voted for:</span>
-                                  <span className="font-medium truncate max-w-[120px]">{gameRoom.players.find(p => p.id === player.votedFor)?.name}</span>
+                                  <span className="font-medium truncate max-w-[120px]">
+                                    {player.votedFor.startsWith('center-') 
+                                      ? `Center ${parseInt(player.votedFor.replace('center-', ''))}` 
+                                      : gameRoom.players.find(p => p.id === player.votedFor)?.name}
+                                  </span>
                                 </p>
                               )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Center Cards Final Roles */}
+                <h4 className="text-xl font-semibold text-indigo-300 mb-4 flex items-center">
+                  <span className="mr-2">🃏</span> Center Cards
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  {gameRoom.centerCards.map((card, index) => {
+                    const cardId = `center-${index + 1}`;
+                    const voteCount = gameRoom.voteCounts ? gameRoom.voteCounts[cardId] || 0 : 0;
+                    const eliminatedIds = gameRoom.eliminatedPlayerIds || [];
+                    const isEliminated = eliminatedIds.includes(cardId);
+                    
+                    // Border colors based on role team
+                    const teamBorderClass = card.role === 'werewolf' 
+                      ? 'border-red-700/70' 
+                      : card.role === 'tanner' 
+                        ? 'border-amber-700/70' 
+                        : 'border-blue-700/70';
+                    
+                    // Background based on elimination status
+                    const bgClass = isEliminated 
+                      ? 'bg-gray-700/70 border-2 border-red-700/70' 
+                      : `bg-gray-700/30 border ${teamBorderClass}`;
+                    
+                    return (
+                      <div 
+                        key={cardId} 
+                        className={`rounded-lg overflow-hidden ${bgClass} transition-all hover:shadow-lg`}
+                      >
+                        <div className={`p-1 ${
+                          card.role === 'werewolf' ? 'bg-gradient-to-r from-red-900 to-gray-800' : 
+                          card.role === 'tanner' ? 'bg-gradient-to-r from-amber-900 to-gray-800' :
+                          'bg-gradient-to-r from-blue-900 to-gray-800'
+                        }`}>
+                          <div className="bg-gray-800 p-4 rounded-md">
+                            <div className="flex justify-between items-start mb-3">
+                              <h4 className="text-lg font-semibold text-white">Center Card {index + 1}</h4>
+                              {isEliminated && (
+                                <span className="bg-red-900/70 text-white text-xs px-2 py-1 rounded-full">
+                                  Eliminated
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="flex justify-center mb-3">
+                              <Card 
+                                role={card.role}
+                                isRevealed={true}
+                                size="md"
+                                hideDescription={true}
+                                className="mx-auto transform hover:scale-105 transition-transform duration-200"
+                              />
+                            </div>
+                            
+                            <p className={`text-center font-semibold ${
+                              card.role === 'werewolf' ? 'text-red-400' : 
+                              card.role === 'tanner' ? 'text-amber-400' :
+                              'text-blue-400'
+                            }`}>
+                              {card.role.charAt(0).toUpperCase() + card.role.slice(1)}
+                            </p>
+                            
+                            <div className="mt-3 pt-3 border-t border-gray-700 space-y-1">
+                              <p className="text-sm text-gray-400 flex justify-between">
+                                <span>Votes received:</span>
+                                <span className="font-medium">{voteCount}</span>
+                              </p>
                             </div>
                           </div>
                         </div>

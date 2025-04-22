@@ -20,7 +20,7 @@ interface GameContextProps {
   startGame: (selectedRoles: Role[]) => Promise<void>;
   performNightAction: (action: NightAction, actionData: Record<string, unknown>) => Promise<void>;
   sendChatMessage: (message: string) => Promise<void>;
-  votePlayer: (playerId: string) => Promise<void>;
+  votePlayer: (targetId: string) => Promise<void>;
   setReady: (isReady: boolean) => Promise<void>;
   playAgain: () => Promise<void>;
   skipCurrentNightAction: () => Promise<void>;
@@ -381,14 +381,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
   };
   
-  // Vote for a player
-  const votePlayer = async (playerId: string): Promise<void> => {
+  // Vote for a player or center card
+  const votePlayer = async (targetId: string): Promise<void> => {
     if (!gameRoom || !currentPlayer) return;
     
     try {
-      await firebaseGameService.castVote(gameRoom.code, currentPlayer.id, playerId);
+      // targetId can be either a player ID or a center card ID (e.g., "center-1")
+      await firebaseGameService.castVote(gameRoom.code, currentPlayer.id, targetId);
     } catch (error) {
-      console.error("Error voting for player:", error);
+      console.error("Error voting for target:", error);
       setError("Failed to cast vote");
       throw error;
     }

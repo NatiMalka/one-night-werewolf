@@ -2204,23 +2204,61 @@ const GamePage: React.FC = () => {
       case 'insomniac': {
         // Show a view of the player's current role
         actionContent = (
-          <div>
-            <p className="text-gray-300 mb-4">
-              As the Insomniac, you wake up at the end of the night to check your final role.
-            </p>
-            
-            <div className="bg-gray-800 p-6 rounded-lg text-center">
-              <p className="text-gray-300 mb-3">Your current role is:</p>
-              <div className="flex justify-center mb-3">
-                <Card 
-                  role={currentRole} 
-                  isRevealed={true}
-                  size="lg"
-                />
-              </div>
-              <p className="font-semibold text-indigo-400 text-xl mb-2">
-                {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
+          <div className="py-2">
+            <div className="bg-indigo-900/50 border border-indigo-700/30 rounded-lg p-5 mb-6">
+              <p className="text-indigo-300 font-semibold mb-2 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Insomniac Action
               </p>
+              <p className="text-gray-300">
+                As the Insomniac, you wake up at the end of the night to check if your role has changed.
+              </p>
+            </div>
+            
+            <div className="bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 p-6">
+              <h3 className="text-xl font-bold text-white flex items-center justify-center mb-5">
+                <span className="mr-2">🌙</span> Your Final Role
+              </h3>
+              
+              <div className="flex justify-center mb-4">
+                <div className="relative max-w-[200px]">
+                  {/* Dramatic glow effect for the card */}
+                  <div className="absolute inset-0 bg-indigo-500/30 rounded-xl blur-xl"></div>
+                  
+                  {/* Card itself with proper scaling */}
+                  <div className="relative">
+                    <Card 
+                      role={currentRole} 
+                      isRevealed={true}
+                      size="lg"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {originalRole !== currentRole && (
+                <div className="mt-6 bg-yellow-900/30 border border-yellow-700/30 rounded-lg p-4">
+                  <p className="text-yellow-300 text-center flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Your role has changed from <span className="font-semibold mx-1">{roleData[originalRole as Role].name}</span> during the night!
+                  </p>
+                </div>
+              )}
+              
+              {originalRole === currentRole && (
+                <div className="mt-6 bg-green-900/30 border border-green-700/30 rounded-lg p-4">
+                  <p className="text-green-300 text-center flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Your role has remained unchanged!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         );

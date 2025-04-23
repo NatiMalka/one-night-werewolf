@@ -23,15 +23,17 @@ const Timer: React.FC<TimerProps> = ({
   // Reset timer when seconds prop changes
   useEffect(() => {
     setTimeLeft(seconds);
-    setIsComplete(seconds <= 0);
+    setIsComplete(false);
   }, [seconds]);
   
   useEffect(() => {
     if (paused) return;
     
     if (timeLeft <= 0) {
-      setIsComplete(true);
-      if (onComplete) onComplete();
+      if (!isComplete) {
+        setIsComplete(true);
+        if (onComplete) onComplete();
+      }
       return;
     }
     
@@ -39,20 +41,22 @@ const Timer: React.FC<TimerProps> = ({
       setTimeLeft(prev => {
         const newValue = prev - 1;
         // Check if timer just reached zero
-        if (newValue === 0) {
+        if (newValue <= 0) {
           setIsComplete(true);
           if (onComplete) {
             // Schedule onComplete to run in the next frame
             setTimeout(onComplete, 0);
           }
+          return 0;
         }
         return newValue;
       });
     }, 1000);
     
     return () => clearTimeout(timer);
-  }, [timeLeft, onComplete, paused]);
+  }, [timeLeft, onComplete, paused, isComplete]);
   
+  // Format time display (minutes:seconds)
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;

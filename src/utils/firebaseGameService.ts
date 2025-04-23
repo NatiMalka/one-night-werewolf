@@ -5,7 +5,10 @@ import { GameRoom, Player, Role, NightAction, ChatMessage } from '../types';
 class FirebaseGameService {
   // Define the roleToAction mapping at the class level
   private roleToAction: Record<Role, NightAction | null> = {
+    'doppelganger': 'doppelganger',
     'werewolf': 'werewolves',
+    'minion': 'minion',
+    'mason': 'mason',
     'seer': 'seer',
     'robber': 'robber',
     'troublemaker': 'troublemaker',
@@ -13,8 +16,7 @@ class FirebaseGameService {
     'insomniac': 'insomniac',
     'villager': null,
     'tanner': null,
-    'hunter': null,
-    'mason': null
+    'hunter': null
   };
 
   // Helper method to create an anti-cache parameter
@@ -166,8 +168,8 @@ class FirebaseGameService {
   startGame(roomCode: string, selectedRoles: Role[]): Promise<void> {
     console.log("Starting game for room:", roomCode, "with roles:", selectedRoles);
     
-    // Default night timer duration - 60 seconds
-    const nightTimeRemaining = 60;
+    // Default night time is 30 seconds per action
+    const nightTimeRemaining = 15; // 15 seconds per player role
     
     // Get room data first to determine the first action with the actual player roles
     return get(ref(database, `rooms/${roomCode}`))
@@ -199,6 +201,7 @@ class FirebaseGameService {
           antiCache: this.getAntiCacheParam()
         };
         
+        // During game setup, determine which roles are present
         // Get all the selected roles to determine possible actions
         const potentialActions: NightAction[] = [];
         
@@ -210,9 +213,26 @@ class FirebaseGameService {
           }
         }
         
+        // Sort the potential actions according to the standard order
+        const orderedNightActions: NightAction[] = [
+          'doppelganger', 
+          'werewolves', 
+          'minion', 
+          'mason', 
+          'seer', 
+          'robber', 
+          'troublemaker', 
+          'drunk', 
+          'insomniac'
+        ];
+        
+        // Filter and sort actions based on the standard order
+        const sortedPotentialActions = orderedNightActions
+          .filter(action => potentialActions.includes(action));
+        
         // Set the first action
-        if (potentialActions.length > 0) {
-          initialUpdates.currentNightAction = potentialActions[0];
+        if (sortedPotentialActions.length > 0) {
+          initialUpdates.currentNightAction = sortedPotentialActions[0];
         } else {
           // No night actions at all, go straight to day phase
           initialUpdates.phase = 'day';
@@ -237,19 +257,19 @@ class FirebaseGameService {
           
           // If there's a current action and no player has that role, skip it
           if (currentAction && this.wasActionSkippedAutomatically(currentAction, roomData.players)) {
-            console.log(`First night action ${currentAction} has no players, auto-skipping...`);
+            console.log(`${Date.now()} - First night action ${currentAction} has no players, auto-skipping in 8s...`);
             
             // Mark room as auto-skipping to pause the client timer
             update(ref(database, `rooms/${roomCode}`), {
               isAutoSkipping: true
             });
             
-            // Random delay between 10-15 seconds, then skip this action
-            const waitTime = Math.floor(Math.random() * 6000) + 10000; // 10-15 seconds
-            
+            // 8 second delay for auto-skip with immediate scheduling
             setTimeout(() => {
-              this.performNightAction(roomCode, currentAction, { autoSkipped: true });
-            }, waitTime);
+              console.log(`${Date.now()} - Executing auto-skip for ${currentAction} after 8s wait`);
+              this.performNightAction(roomCode, currentAction, { autoSkipped: true })
+                .catch(error => console.error("Error in auto-skip:", error));
+            }, 8000); // Exactly 8 seconds
           }
         }
       })
@@ -262,13 +282,14 @@ class FirebaseGameService {
   // Perform night action
   performNightAction(roomCode: string, action: NightAction, actionData: Record<string, unknown>): Promise<void> {
     const actionId = push(ref(database, `rooms/${roomCode}/actions`)).key;
-    console.log("Performing night action:", action, "with data:", actionData);
+    const startTime = Date.now();
+    console.log(`${startTime} - Performing night action:`, action, "with data:", actionData);
     
     // First record the action
     return set(ref(database, `rooms/${roomCode}/actions/${actionId}`), {
       action,
       actionData,
-      timestamp: Date.now()
+      timestamp: startTime
     })
     .then(() => {
       // Get the current room data to determine next action
@@ -279,9 +300,24 @@ class FirebaseGameService {
         const roomData = snapshot.val();
         const players = roomData.players || {};
         
-        // Add this action to completed actions
+        // Define the fixed night action order
+        const orderedNightActions: NightAction[] = [
+          'doppelganger', 
+          'werewolves', 
+          'minion', 
+          'mason', 
+          'seer', 
+          'robber', 
+          'troublemaker', 
+          'drunk', 
+          'insomniac'
+        ];
+        
+        // Add this action to completed actions if not already in the list
         const completedActions = roomData.nightActionsCompleted || [];
-        completedActions.push(action);
+        if (!completedActions.includes(action)) {
+          completedActions.push(action);
+        }
         
         // Get all the selected roles to determine possible actions
         const selectedRoles = roomData.selectedRoles || [];
@@ -351,16 +387,17 @@ class FirebaseGameService {
           }
         }
         
-        // Remove completed actions
-        const remainingActions = potentialActions.filter(
-          action => !completedActions.includes(action)
-        );
-        
-        // Find next action
+        // Find the next action to perform by following the fixed order
         let nextAction: NightAction | null = null;
-        for (const potentialAction of remainingActions) {
-          nextAction = potentialAction;
-          break;
+        const currentActionIndex = orderedNightActions.indexOf(action);
+        
+        // Look for the next action in the order that hasn't been completed yet
+        for (let i = currentActionIndex + 1; i < orderedNightActions.length; i++) {
+          const nextPossibleAction = orderedNightActions[i];
+          if (potentialActions.includes(nextPossibleAction) && !completedActions.includes(nextPossibleAction)) {
+            nextAction = nextPossibleAction;
+            break;
+          }
         }
         
         // Updates to apply
@@ -370,71 +407,99 @@ class FirebaseGameService {
           ...roleUpdates
         };
         
-        // Check if the current completed action was skipped due to no player having that role
+        // Check if the current action was auto-skipped
         const wasSkippedAutomatically = 
           actionData.autoSkipped || 
           this.wasActionSkippedAutomatically(action, roomData.players);
         
-        // Add an isAutoSkipping flag to updates when an action is being auto-skipped
-        if (wasSkippedAutomatically && !actionData.skippedByHost) {
-          updates.isAutoSkipping = true;
-        }
-        
-        // If an action was skipped automatically (no player with that role), 
-        // create a promise that resolves after a random delay between 10-15 seconds
-        const maybeSimulateWait = (callback: () => void) => {
-          if (wasSkippedAutomatically && !actionData.skippedByHost) {
-            console.log(`No player with role needed for ${action}, simulating random wait time...`);
-            const waitTime = Math.floor(Math.random() * 6000) + 10000; // 10-15 seconds
-            return new Promise(resolve => setTimeout(() => {
-              callback();
-              resolve(null);
-            }, waitTime));
-          } else {
-            callback();
-            return Promise.resolve();
-          }
-        };
-        
-        // Apply updates and handle next action logic
-        return maybeSimulateWait(() => {
+        // Create a promise to handle wait time (for auto-skipped roles only)
+        const handleNextAction = () => {
           // If there's another action, set it and reset timer
           if (nextAction) {
-            console.log("Moving to next night action:", nextAction);
+            console.log(`${Date.now()} - Moving to next night action:`, nextAction);
             updates.currentNightAction = nextAction;
-            updates.nightTimeRemaining = 60; // Reset timer for next action
+            updates.nightTimeRemaining = 15; // 15 seconds for player roles
             updates.isAutoSkipping = false; // Reset auto-skipping flag
           } 
           // Otherwise, move to day phase
           else {
-            console.log("All night actions completed, moving to day phase");
+            console.log(`${Date.now()} - All night actions completed, moving to day phase`);
             updates.phase = 'day';
             updates.currentNightAction = null;
             updates.dayTimeRemaining = 300; // 5 minutes for day phase
             updates.dayStartedAt = Date.now();
             updates.isAutoSkipping = false; // Reset auto-skipping flag
           }
-        }).then(() => {
-          // Apply the updates
+          
+          // Apply the updates immediately
           return update(ref(database, `rooms/${roomCode}`), updates);
-        }).then(() => {
-          // After updating, check if the next action needs to be skipped as well
-          if (nextAction && this.wasActionSkippedAutomatically(nextAction, roomData.players)) {
-            console.log(`Next night action ${nextAction} has no players, planning to auto-skip...`);
-            
-            // Mark room as auto-skipping to pause the client timer
-            update(ref(database, `rooms/${roomCode}`), {
-              isAutoSkipping: true
+        };
+        
+        // For auto-skipped actions, we may need to wait
+        if (wasSkippedAutomatically && !actionData.skippedByHost) {
+          console.log(`${Date.now()} - No player with role needed for ${action}, simulating 8s wait...`);
+          
+          // Apply most updates immediately except for the next action
+          const initialUpdates = {
+            ...updates,
+            isAutoSkipping: true  // Keep auto-skipping flag true during wait
+          };
+          
+          // First apply the initial updates
+          return update(ref(database, `rooms/${roomCode}`), initialUpdates)
+            .then(() => {
+              // Then set a timeout to apply the next action after 8 seconds
+              return new Promise<void>(resolve => {
+                setTimeout(() => {
+                  console.log(`${Date.now()} - Auto-skip wait complete for ${action}, now handling next action`);
+                  handleNextAction()
+                    .then(() => {
+                      // Check if next action needs auto-skipping
+                      if (nextAction && this.wasActionSkippedAutomatically(nextAction, roomData.players)) {
+                        console.log(`${Date.now()} - Next action ${nextAction} has no players, scheduling auto-skip in 8s...`);
+                        
+                        // Mark as auto-skipping
+                        update(ref(database, `rooms/${roomCode}`), { isAutoSkipping: true })
+                          .then(() => {
+                            // Schedule the next auto-skip with precise timing
+                            setTimeout(() => {
+                              console.log(`${Date.now()} - Executing scheduled auto-skip for ${nextAction}`);
+                              this.performNightAction(roomCode, nextAction, { autoSkipped: true })
+                                .catch(error => console.error("Error in scheduled auto-skip:", error));
+                            }, 8000); // Exactly 8 seconds
+                          });
+                      }
+                      resolve();
+                    })
+                    .catch(error => {
+                      console.error("Error in auto-skip handling:", error);
+                      resolve();
+                    });
+                }, 8000); // Exactly 8 seconds
+              });
             });
-            
-            // Random delay between 10-15 seconds, then skip this action
-            const waitTime = Math.floor(Math.random() * 6000) + 10000; // 10-15 seconds
-            
-            setTimeout(() => {
-              this.performNightAction(roomCode, nextAction, { autoSkipped: true });
-            }, waitTime);
-          }
-        });
+        } else {
+          // For manual actions, apply updates immediately
+          return handleNextAction()
+            .then(() => {
+              // Check if next action needs auto-skipping
+              if (nextAction && this.wasActionSkippedAutomatically(nextAction, roomData.players)) {
+                console.log(`${Date.now()} - Next action ${nextAction} has no players, scheduling auto-skip in 8s...`);
+                
+                // Mark as auto-skipping
+                return update(ref(database, `rooms/${roomCode}`), { isAutoSkipping: true })
+                  .then(() => {
+                    // Schedule the next auto-skip with precise timing
+                    setTimeout(() => {
+                      console.log(`${Date.now()} - Executing scheduled auto-skip for ${nextAction}`);
+                      this.performNightAction(roomCode, nextAction, { autoSkipped: true })
+                        .catch(error => console.error("Error in scheduled auto-skip:", error));
+                    }, 8000); // Exactly 8 seconds
+                  });
+              }
+              return Promise.resolve();
+            });
+        }
       }
       
       return Promise.resolve(); // Added to handle the case when snapshot doesn't exist
@@ -448,7 +513,10 @@ class FirebaseGameService {
   // Helper to check if an action was skipped automatically because no player has the role
   private wasActionSkippedAutomatically(action: NightAction, players: Record<string, Player>): boolean {
     const roleNeededForAction: Record<NightAction, Role | null> = {
+      'doppelganger': 'doppelganger',
       'werewolves': 'werewolf',
+      'minion': 'minion',
+      'mason': 'mason',
       'seer': 'seer',
       'robber': 'robber',
       'troublemaker': 'troublemaker',

@@ -8,52 +8,73 @@ export const roleData: Record<Role, {
   nightOrder?: number;
   nightAction?: NightAction;
 }> = {
+  doppelganger: {
+    name: 'Doppelgänger',
+    team: 'village',
+    description: 'Look at another player\'s card and assume that role.',
+    nightOrder: 1,
+    nightAction: 'doppelganger'
+  },
   werewolf: {
     name: 'Werewolf',
     team: 'werewolf',
     description: 'Wake at night to see other werewolves. Win if no werewolf is voted out.',
-    nightOrder: 1,
+    nightOrder: 2,
     nightAction: 'werewolves'
   },
-  villager: {
-    name: 'Villager',
+  minion: {
+    name: 'Minion',
+    team: 'werewolf',
+    description: 'Wake at night to see who the werewolves are. You win when they win.',
+    nightOrder: 3,
+    nightAction: 'minion'
+  },
+  mason: {
+    name: 'Mason',
     team: 'village',
-    description: 'No special abilities. Win if at least one werewolf is eliminated.'
+    description: 'Wake to see other masons.',
+    nightOrder: 4,
+    nightAction: 'mason'
   },
   seer: {
     name: 'Seer',
     team: 'village',
     description: 'Look at one player\'s role or two center cards during the night.',
-    nightOrder: 2,
+    nightOrder: 5,
     nightAction: 'seer'
   },
   robber: {
     name: 'Robber',
     team: 'village',
     description: 'Swap roles with another player without seeing it.',
-    nightOrder: 3,
+    nightOrder: 6,
     nightAction: 'robber'
   },
   troublemaker: {
     name: 'Troublemaker',
     team: 'village',
     description: 'Switch two other players\' roles without looking at them.',
-    nightOrder: 4,
+    nightOrder: 7,
     nightAction: 'troublemaker'
   },
   drunk: {
     name: 'Drunk',
     team: 'village',
     description: 'Exchange your card with a center card without looking at it.',
-    nightOrder: 5,
+    nightOrder: 8,
     nightAction: 'drunk'
   },
   insomniac: {
     name: 'Insomniac',
     team: 'village',
     description: 'Wake at the end of night to see your final role.',
-    nightOrder: 6,
+    nightOrder: 9,
     nightAction: 'insomniac'
+  },
+  villager: {
+    name: 'Villager',
+    team: 'village',
+    description: 'No special abilities. Win if at least one werewolf is eliminated.'
   },
   tanner: {
     name: 'Tanner',
@@ -64,11 +85,6 @@ export const roleData: Record<Role, {
     name: 'Hunter',
     team: 'village',
     description: 'If killed, you also kill the player you voted for.'
-  },
-  mason: {
-    name: 'Mason',
-    team: 'village',
-    description: 'Wake to see other masons.'
   }
 };
 
@@ -210,7 +226,17 @@ export const didTannerWin = (players: Player[], voteCounts: Record<string, numbe
 
 // Get next night action
 export const getNextNightAction = (room: GameRoom): NightAction | undefined => {
-  const nightActions: NightAction[] = ['werewolves', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'];
+  const nightActions: NightAction[] = [
+    'doppelganger', 
+    'werewolves', 
+    'minion', 
+    'mason', 
+    'seer', 
+    'robber', 
+    'troublemaker', 
+    'drunk', 
+    'insomniac'
+  ];
   
   // Filter actions based on player roles
   const availableActions = nightActions.filter(action => {

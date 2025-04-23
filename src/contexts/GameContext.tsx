@@ -156,8 +156,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     if (gameRoom?.phase === 'night' && gameRoom.nightTimeRemaining > 0) {
       // Don't update timer if auto-skipping is in progress
       if (gameRoom.isAutoSkipping) {
+        console.log("Timer paused - auto-skipping in progress");
         return;
       }
+      
+      console.log(`Setting up night timer for ${gameRoom.currentNightAction} with ${gameRoom.nightTimeRemaining} seconds`);
       
       // Set up timer to update every second
       const timer = setInterval(() => {
@@ -166,6 +169,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
           
           // Don't update timer if auto-skipping flag has been set
           if (prevRoom.isAutoSkipping) {
+            console.log("Auto-skipping detected, pausing timer");
             return prevRoom;
           }
           
@@ -185,9 +189,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         });
       }, 1000);
       
-      return () => clearInterval(timer);
+      return () => {
+        console.log("Cleaning up night timer");
+        clearInterval(timer);
+      };
     }
-  }, [gameRoom?.phase, gameRoom?.nightTimeRemaining, gameRoom?.isAutoSkipping]);
+  }, [gameRoom?.phase, gameRoom?.nightTimeRemaining, gameRoom?.isAutoSkipping, gameRoom?.currentNightAction]);
   
   // Handle day timer
   useEffect(() => {
@@ -353,11 +360,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   };
   
   // Perform a night action
-  const performNightAction = async (action: NightAction, actionData: Record<string, unknown>): Promise<void> => {
-    if (!gameRoom || !currentPlayer) return;
-    
+  const performNightAction = async (action: NightAction, actionData: Record<string, unknown> = {}): Promise<void> => {
+    if (!gameRoom || !gameRoom.code) {
+      setError("No active game room");
+      return;
+    }
+
     try {
+      console.log(`Performing night action: ${action} with data:`, actionData);
       await firebaseGameService.performNightAction(gameRoom.code, action, actionData);
+      console.log(`Night action ${action} completed successfully`);
     } catch (error) {
       console.error("Error performing night action:", error);
       setError("Failed to perform night action");

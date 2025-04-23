@@ -384,9 +384,10 @@ const GamePage: React.FC = () => {
             <div className="flex items-center">
               <div className="bg-gray-900/70 backdrop-blur-sm px-6 py-4 rounded-lg shadow-inner border border-purple-700/30">
                 <Timer 
-                  key={`night-timer-${gameRoom.nightTimeRemaining || 60}`}
-                  seconds={gameRoom.nightTimeRemaining || 60} 
+                  key={`night-timer-${gameRoom.currentNightAction}-${gameRoom.nightTimeRemaining}`}
+                  seconds={gameRoom.nightTimeRemaining || 30} 
                   large 
+                  paused={gameRoom.isAutoSkipping}
                   onComplete={() => {
                     if (gameRoom.currentNightAction) {
                       // If player can perform the action but hasn't done so, auto-submit
@@ -423,8 +424,12 @@ const GamePage: React.FC = () => {
                       <div className="relative w-32 h-32 flex items-center justify-center mb-4 mx-auto">
                         <div className="absolute inset-0 bg-purple-900/30 rounded-full animate-pulse-slow"></div>
                         <div className="absolute inset-2 bg-indigo-900/40 rounded-full animate-pulse-slow animation-delay-300"></div>
+                        {/* Night phase action icon */}
                         <div className="relative z-10 text-5xl">
+                          {gameRoom.currentNightAction === 'doppelganger' && '🎭'}
                           {gameRoom.currentNightAction === 'werewolves' && '🐺'}
+                          {gameRoom.currentNightAction === 'minion' && '🦹'}
+                          {gameRoom.currentNightAction === 'mason' && '👷'}
                           {gameRoom.currentNightAction === 'seer' && '👁️'}
                           {gameRoom.currentNightAction === 'robber' && '🔄'}
                           {gameRoom.currentNightAction === 'troublemaker' && '👥'}
@@ -436,10 +441,16 @@ const GamePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <h3 className="text-3xl font-bold text-white mb-4 tracking-wider">
-                    {gameRoom.currentNightAction 
-                      ? `${gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)} Wake Up!`
-                      : 'Everyone is asleep...'}
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {gameRoom.currentNightAction ? (
+                      <>
+                        Current Action: <span className="text-purple-300">
+                          {gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)}
+                        </span>
+                      </>
+                    ) : (
+                      "Waiting for next action..."
+                    )}
                   </h3>
                   
                   <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-5 max-w-xl mx-auto border border-indigo-800/30">
@@ -502,7 +513,7 @@ const GamePage: React.FC = () => {
               </div>
             )}
             
-            {/* Night Sequence Visualization */}
+            {/* Night Sequence */}
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
               <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/30">
                 <h3 className="font-bold text-white flex items-center">
@@ -511,38 +522,40 @@ const GamePage: React.FC = () => {
               </div>
               <div className="p-5">
                 <div className="space-y-3">
-                  {['werewolves', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
+                  {['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
                     // Determine if this role has already gone, is current, or is upcoming
                     const isCurrent = gameRoom.currentNightAction === role;
                     const hasGone = !gameRoom.currentNightAction 
                       ? false 
-                      : ['werewolves', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac']
+                      : ['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac']
                           .indexOf(gameRoom.currentNightAction) > index;
                     
+                    // Check if this role is in the game
+                    const roleInGame = (gameRoom.selectedRoles || []).some((gameRole: Role) => {
+                      // Map the night action back to a role
+                      const mappedRole = role === 'werewolves' ? 'werewolf' : role;
+                      return gameRole === mappedRole;
+                    });
+                    
+                    // Only show roles that are in the game
+                    if (!roleInGame) return null;
+                    
+                    const statusColor = isCurrent 
+                      ? 'text-yellow-300 font-medium'
+                      : hasGone 
+                        ? 'text-gray-500 line-through'
+                        : 'text-gray-400';
+                    
+                    const icon = isCurrent 
+                      ? '👁️' 
+                      : hasGone 
+                        ? '✓' 
+                        : '⏱️';
+                    
                     return (
-                      <div 
-                        key={role}
-                        className={`flex items-center p-2 rounded-lg
-                          ${isCurrent ? 'bg-indigo-900/40 border border-indigo-700/50' : ''}
-                          ${hasGone ? 'opacity-60' : ''}
-                        `}
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3
-                          ${isCurrent ? 'bg-indigo-700 text-white' : 'bg-gray-800 text-gray-400'}
-                          ${hasGone ? 'bg-gray-900 text-gray-600' : ''}
-                        `}>
-                          {hasGone && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>}
-                          {isCurrent && <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>}
-                          {!hasGone && !isCurrent && index + 1}
-                        </div>
-                        <span className={`
-                          ${isCurrent ? 'text-indigo-300 font-medium' : 'text-gray-400'}
-                          ${hasGone ? 'text-gray-500 line-through' : ''}
-                        `}>
-                          {role.charAt(0).toUpperCase() + role.slice(1)}
-                        </span>
+                      <div key={role} className={`flex items-center ${statusColor}`}>
+                        <span className="mr-2">{icon}</span>
+                        <span>{role.charAt(0).toUpperCase() + role.slice(1)}</span>
                       </div>
                     );
                   })}

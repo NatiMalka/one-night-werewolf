@@ -8,7 +8,9 @@ export type Role =
   | 'insomniac' 
   | 'tanner' 
   | 'hunter' 
-  | 'mason';
+  | 'mason'
+  | 'doppelganger'
+  | 'minion';
 
 export type Team = 'village' | 'werewolf' | 'tanner';
 
@@ -25,7 +27,10 @@ export type NightAction =
   | 'robber' 
   | 'troublemaker' 
   | 'drunk' 
-  | 'insomniac';
+  | 'insomniac'
+  | 'doppelganger'
+  | 'minion'
+  | 'mason';
 
 export type Player = {
   id: string;
@@ -67,6 +72,7 @@ export type GameRoom = {
   hunterVictimId?: string;
   voteCounts?: Record<string, number>;
   isAutoSkipping?: boolean;
+  selectedRoles: Role[];
 };
 
 export type ChatMessage = {

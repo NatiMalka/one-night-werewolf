@@ -2206,27 +2206,21 @@ const GamePage: React.FC = () => {
         actionContent = (
           <div>
             <p className="text-gray-300 mb-4">
-              As the Insomniac, you wake up at the end of the night to check if your role has changed.
+              As the Insomniac, you wake up at the end of the night to check your final role.
             </p>
             
-            <div className="bg-gray-800 p-4 rounded-lg text-center">
-              <p className="text-gray-300 mb-2">Your current role is:</p>
-              <div className="flex justify-center mb-2">
+            <div className="bg-gray-800 p-6 rounded-lg text-center">
+              <p className="text-gray-300 mb-3">Your current role is:</p>
+              <div className="flex justify-center mb-3">
                 <Card 
                   role={currentRole} 
                   isRevealed={true}
-                  size="md"
+                  size="lg"
                 />
               </div>
-              <p className="font-semibold text-indigo-400">
+              <p className="font-semibold text-indigo-400 text-xl mb-2">
                 {currentRole.charAt(0).toUpperCase() + currentRole.slice(1)}
               </p>
-              
-              {originalRole !== currentRole && (
-                <p className="text-yellow-400 mt-4">
-                  Your role has changed from {originalRole.charAt(0).toUpperCase() + originalRole.slice(1)}!
-                </p>
-              )}
             </div>
           </div>
         );

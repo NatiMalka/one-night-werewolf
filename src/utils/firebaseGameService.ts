@@ -375,6 +375,44 @@ class FirebaseGameService {
               targetRole: targetPlayer.currentRole,
               originalRobberRole: robberPlayer.currentRole,
             };
+            
+            // Actually swap the roles in the database 
+            // This ensures roles are updated before the Insomniac's turn
+            const robberCurrentRole = robberPlayer.currentRole;
+            const targetCurrentRole = targetPlayer.currentRole;
+            
+            // Update the target player's role to be the robber's role
+            roleUpdates[`players/${targetPlayerId}/currentRole`] = robberCurrentRole;
+            
+            // Update the robber's current role to be the target's role
+            roleUpdates[`players/${robberPlayerId}/currentRole`] = targetCurrentRole;
+            
+            console.log(`Robber (${robberPlayerId}) swapped roles with ${targetPlayerId}:`, 
+              `Robber's new role: ${targetCurrentRole}`,
+              `Target's new role: ${robberCurrentRole}`);
+          }
+        }
+        
+        // Add Troublemaker special action handling
+        if (action === 'troublemaker' && actionData.player1Id && actionData.player2Id) {
+          const player1Id = actionData.player1Id as string;
+          const player2Id = actionData.player2Id as string;
+          
+          const player1 = players[player1Id];
+          const player2 = players[player2Id];
+          
+          if (player1 && player2) {
+            // Get current roles of both players
+            const player1CurrentRole = player1.currentRole;
+            const player2CurrentRole = player2.currentRole;
+            
+            // Swap the roles immediately in the database
+            roleUpdates[`players/${player1Id}/currentRole`] = player2CurrentRole;
+            roleUpdates[`players/${player2Id}/currentRole`] = player1CurrentRole;
+            
+            console.log(`Troublemaker swapped roles between ${player1Id} and ${player2Id}:`, 
+              `${player1.name}'s new role: ${player2CurrentRole}`,
+              `${player2.name}'s new role: ${player1CurrentRole}`);
           }
         }
         

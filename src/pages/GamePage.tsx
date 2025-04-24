@@ -514,14 +514,22 @@ const GamePage: React.FC = () => {
             )}
             
             {/* Night Sequence */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
-              <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/30">
+            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 relative">
+              {/* Stars background effect */}
+              <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/50 to-purple-950/50"></div>
+              <div className="absolute inset-0 stars-1"></div>
+              <div className="absolute inset-0 stars-2"></div>
+              <div className="absolute inset-0 stars-3"></div>
+              <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/40 relative z-10">
                 <h3 className="font-bold text-white flex items-center">
                   <span className="mr-2">🌠</span> Night Sequence
                 </h3>
               </div>
-              <div className="p-5">
-                <div className="space-y-3">
+              <div className="p-5 relative">
+                {/* Timeline Track */}
+                <div className="absolute left-8 top-7 bottom-7 w-1 bg-indigo-900/50 rounded-full"></div>
+                
+                <div className="space-y-6 relative z-10">
                   {['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
                     // Determine if this role has already gone, is current, or is upcoming
                     const isCurrent = gameRoom.currentNightAction === role;
@@ -540,22 +548,67 @@ const GamePage: React.FC = () => {
                     // Only show roles that are in the game
                     if (!roleInGame) return null;
                     
-                    const statusColor = isCurrent 
-                      ? 'text-yellow-300 font-medium'
+                    // Animation classes based on status
+                    const timelineNodeClass = isCurrent 
+                      ? 'bg-yellow-300 ring-4 ring-yellow-300/20 scale-125 animate-pulse-slow'
                       : hasGone 
-                        ? 'text-gray-500 line-through'
-                        : 'text-gray-400';
+                        ? 'bg-green-500'
+                        : 'bg-indigo-600';
                     
-                    const icon = isCurrent 
-                      ? '👁️' 
+                    const timelineLabelClass = isCurrent
+                      ? 'text-yellow-300 font-medium transform translate-x-2 transition-all duration-300'
                       : hasGone 
-                        ? '✓' 
-                        : '⏱️';
+                        ? 'text-green-500'
+                        : 'text-indigo-400';
+                        
+                    // Role icons
+                    const roleIcons = {
+                      doppelganger: '🎭',
+                      werewolves: '🐺',
+                      minion: '🧟',
+                      mason: '🛠️',
+                      seer: '👁️',
+                      robber: '🥷',
+                      troublemaker: '😈',
+                      drunk: '🍺',
+                      insomniac: '😴'
+                    };
                     
                     return (
-                      <div key={role} className={`flex items-center ${statusColor}`}>
-                        <span className="mr-2">{icon}</span>
-                        <span>{role.charAt(0).toUpperCase() + role.slice(1)}</span>
+                      <div key={role} className="flex items-center group">
+                        {/* Timeline Node */}
+                        <div className={`w-4 h-4 rounded-full ${timelineNodeClass} shadow-lg z-20 transition-all duration-500 ease-in-out`}></div>
+                        
+                        {/* Content Container */}
+                        <div className={`ml-6 flex items-center bg-indigo-900/30 backdrop-blur-sm px-4 py-3 rounded-lg transition-all duration-300 ${isCurrent ? 'shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''} ${hasGone ? 'opacity-75' : 'opacity-100'}`}>
+                          {/* Role Icon with Animation */}
+                          <span className={`text-2xl mr-3 ${isCurrent ? 'animate-bounce-subtle' : ''}`}>
+                            {roleIcons[role as keyof typeof roleIcons]}
+                          </span>
+                          
+                          {/* Role Name */}
+                          <span className={`font-medium ${timelineLabelClass} transition-all duration-300`}>
+                            {role.charAt(0).toUpperCase() + role.slice(1)}
+                          </span>
+                          
+                          {/* Status Indicator */}
+                          <span className="ml-auto">
+                            {hasGone && (
+                              <span className="text-green-500 animate-fade-in">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              </span>
+                            )}
+                            {isCurrent && (
+                              <span className="text-yellow-300 animate-pulse">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                              </span>
+                            )}
+                          </span>
+                        </div>
                       </div>
                     );
                   })}

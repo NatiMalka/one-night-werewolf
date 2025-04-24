@@ -1,0 +1,65 @@
+I'll help identify where sound effects would enhance the game experience without generating code yet. Here's an analysis of where sound effects would be most beneficial in the One Night Werewolf project:
+
+## Sound Effect Implementation Strategy
+
+### 1. UI Interaction Sounds
+- **Button Clicks**: Subtle click/tap sound when pressing buttons in lobbies and game controls
+- **Toggle Actions**: Distinctive sound when toggling settings (like voice narration)
+- **Form Submission**: Confirmation sound when submitting forms (creating/joining rooms)
+- **Error Feedback**: Warning sound for invalid actions or errors
+
+### 2. Game Phase Transitions
+- **Phase Change**: Distinct sound effects when transitioning between game phases:
+  - Lobby → Night Phase (perhaps a wolf howl or nighttime ambience)
+  - Night → Day (morning rooster or bell)
+  - Day → Voting (dramatic tension sound)
+  - Voting → Results (drumroll or suspense sound)
+
+### 3. Night Phase Actions
+- **Role Activation**: Unique sound for each role when it's their turn:
+  - Werewolf: Low growl
+  - Seer: Mystical chime
+  - Robber: Sneaky/theft sound
+  - Troublemaker: Mischievous giggle
+  - etc.
+- **Action Completion**: Success sound when completing a night action
+- **Timer Sounds**: Ticking as timer runs low, bell when time is up
+
+### 4. Voting Phase
+- **Vote Casting**: Sound when a player casts a vote
+- **Vote Received**: Sound when receiving a vote
+- **Vote Countdown**: Suspenseful music or sounds during final seconds
+
+### 5. Game Results
+- **Victory/Defeat**: Different sounds based on which team won
+  - Village Team Win: Triumphant/celebratory sound
+  - Werewolf Team Win: Evil laugh or howl
+  - Tanner Win: Bizarre/unexpected sound
+- **Player Elimination**: Dramatic sound when seeing who was eliminated
+
+### 6. Chat and Social
+- **Chat Message**: Subtle notification sound when new chat messages arrive
+- **Player Joining/Leaving**: Door open/close sound for lobby entrances/exits
+- **Ready Status**: "Ready" confirmation sound
+
+### 7. Ambient Background
+- **Lobby Music**: Light, social music for lobbies
+- **Night Phase**: Eerie/suspenseful background ambience
+- **Day Phase**: Morning discussion ambient noise (birds, light music)
+- **Voting**: Tense/dramatic background music
+
+### 8. Implementation Priority
+1. **Core Game Events**: Phase transitions, voting, results
+2. **Role-specific Actions**: Sounds for night actions
+3. **UI Feedback**: Button clicks, toggles
+4. **Ambient Sounds**: Background music/effects
+5. **Social Features**: Chat notifications
+
+### 9. Technical Considerations
+- **Volume Control**: Master volume slider and category controls (UI, game, ambient)
+- **Mute Option**: Allow players to mute specific sound categories
+- **Preloading**: Preload essential sounds to avoid delays
+- **Mobile Optimization**: Ensure sounds work well on mobile devices
+- **Audio Sprites**: Combine small sounds into audio sprites for better performance
+
+Would you like me to focus on implementing any specific category of these sound effects first?

@@ -1,4 +1,5 @@
 import React from 'react';
+import { playButtonClickSound } from '../utils/soundEffects';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost';
@@ -8,6 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
   className?: string;
+  playSound?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,6 +22,8 @@ const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   className = '',
   disabled,
+  playSound = true,
+  onClick,
   ...props
 }) => {
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
@@ -44,6 +48,16 @@ const Button: React.FC<ButtonProps> = ({
   
   const widthClass = fullWidth ? 'w-full' : '';
 
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (playSound && !(disabled || isLoading)) {
+      playButtonClickSound();
+    }
+    
+    if (onClick) {
+      onClick(event);
+    }
+  };
+
   return (
     <button
       className={`
@@ -55,6 +69,7 @@ const Button: React.FC<ButtonProps> = ({
         ${className}
       `}
       disabled={disabled || isLoading}
+      onClick={handleClick}
       {...props}
     >
       {isLoading && (

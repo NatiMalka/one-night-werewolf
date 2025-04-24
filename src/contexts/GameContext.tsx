@@ -57,6 +57,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   // Save voice narration preference when it changes
   useEffect(() => {
     localStorage.setItem('enableVoiceNarration', String(enableVoiceNarration));
+    
+    // Stop any playing audio when voice narration is turned off
+    if (!enableVoiceNarration) {
+      // Find any audio elements that might be playing and stop them
+      const audioElements = document.querySelectorAll('audio');
+      audioElements.forEach(audio => {
+        if (!audio.paused) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      });
+    }
   }, [enableVoiceNarration]);
   
   const navigate = useNavigate();

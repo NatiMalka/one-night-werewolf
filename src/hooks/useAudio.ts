@@ -144,6 +144,16 @@ export const useAudio = ({ src, autoPlay = false, onEnded }: UseAudioProps = {})
     }
   }, [src, autoPlay]);
 
+  // Stop playing audio when autoPlay changes to false
+  useEffect(() => {
+    if (audioRef.current && !autoPlay && !audioRef.current.paused) {
+      console.log("🎵 Auto-play was disabled, stopping audio");
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setStatus('idle');
+    }
+  }, [autoPlay]);
+
   const play = useCallback(() => {
     if (audioRef.current) {
       console.log("🎵 Manual play requested");

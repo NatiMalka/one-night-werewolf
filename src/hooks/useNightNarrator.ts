@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { NightAction } from '../types';
 import { useAudio } from './useAudio';
+import { useGame } from '../contexts/GameContext';
 
 interface UseNightNarratorProps {
   currentNightAction?: NightAction;
@@ -15,6 +16,7 @@ export const useNightNarrator = ({
   const [audioAvailable, setAudioAvailable] = useState<boolean>(false);
   const prevActionRef = useRef<NightAction | undefined>(undefined);
   const attemptedPlayRef = useRef<boolean>(false);
+  const { enableVoiceNarration } = useGame();
   
   const { 
     audioRef,
@@ -23,7 +25,7 @@ export const useNightNarrator = ({
     status
   } = useAudio({ 
     src: audioSrc, 
-    autoPlay: !!audioSrc && audioAvailable,
+    autoPlay: !!audioSrc && audioAvailable && enableVoiceNarration,
     onEnded: onNarrationEnd
   });
   
@@ -39,7 +41,8 @@ export const useNightNarrator = ({
   useEffect(() => {
     if (currentNightAction && 
         !attemptedPlayRef.current && 
-        audioAvailable) {
+        audioAvailable && 
+        enableVoiceNarration) {  // Only auto-play if voice narration is enabled
       
       console.log(`🎵 ${currentNightAction} phase detected, preparing auto-play`);
       attemptedPlayRef.current = true;
@@ -52,7 +55,7 @@ export const useNightNarrator = ({
       
       return () => clearTimeout(timer);
     }
-  }, [currentNightAction, audioAvailable, play]);
+  }, [currentNightAction, audioAvailable, play, enableVoiceNarration]);
 
   // Get the audio file path for a night action
   const getAudioForAction = useCallback((action: NightAction): string => {
@@ -65,7 +68,7 @@ export const useNightNarrator = ({
 
   // Update audio source when night action changes
   useEffect(() => {
-    if (currentNightAction) {
+    if (currentNightAction && enableVoiceNarration) { // Only set audio source if voice narration is enabled
       try {
         const audioPath = getAudioForAction(currentNightAction);
         console.log(`Setting audio source for ${currentNightAction} to ${audioPath}`);
@@ -80,17 +83,19 @@ export const useNightNarrator = ({
       setAudioSrc('');
       setAudioAvailable(false);
     }
-  }, [currentNightAction, getAudioForAction]);
+  }, [currentNightAction, getAudioForAction, enableVoiceNarration]);
 
   // Method to play narration manually
   const playNarration = useCallback(() => {
-    if (audioSrc && audioAvailable) {
+    if (audioSrc && audioAvailable && enableVoiceNarration) { // Only play if voice narration is enabled
       console.log(`Manually playing narration: ${audioSrc}`);
       play();
+    } else if (audioSrc && !enableVoiceNarration) {
+      console.log('Voice narration is disabled, not playing audio');
     } else if (audioSrc) {
       console.warn(`Cannot play audio ${audioSrc} - file not available`);
     }
-  }, [audioSrc, audioAvailable, play]);
+  }, [audioSrc, audioAvailable, play, enableVoiceNarration]);
 
   // Method to stop narration
   const stopNarration = useCallback(() => {
@@ -104,7 +109,7 @@ export const useNightNarrator = ({
     stopNarration,
     currentAudioSrc: audioSrc,
     narrationStatus: status,
-    audioAvailable,
+    audioAvailable: audioAvailable && enableVoiceNarration, // Only consider audio available if voice narration is enabled
     audioElement: audioRef.current
   };
 }; 

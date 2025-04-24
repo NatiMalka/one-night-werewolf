@@ -631,7 +631,7 @@ const GamePage: React.FC = () => {
                     const roleIcons = {
                       doppelganger: '🎭',
                       werewolves: '🐺',
-                      minion: '🧟',
+                      minion: <img src="/images/minion.jpg" alt="Minion" className="w-6 h-6 rounded-full object-cover" />,
                       mason: '🛠️',
                       seer: '👁️',
                       robber: '🥷',
@@ -1993,6 +1993,14 @@ const GamePage: React.FC = () => {
         
         actionContent = (
           <div>
+            <div className="flex justify-center mb-6">
+              <img 
+                src="/images/minion.jpg" 
+                alt="Minion" 
+                className="w-24 h-24 rounded-full object-cover border-4 border-yellow-600 shadow-lg shadow-purple-900/50" 
+              />
+            </div>
+            
             <p className="text-gray-300 mb-4">
               As the Minion, you serve the Werewolves. You will now see who the Werewolves are, but they will not know you are the Minion.
             </p>

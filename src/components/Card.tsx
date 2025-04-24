@@ -81,6 +81,9 @@ const Card: React.FC<CardProps> = ({
   // Determine if we should show the insomniac image
   const showInsomniacImage = isRevealed && role === 'insomniac';
   
+  // Determine if we should show the minion image
+  const showMinionImage = isRevealed && role === 'minion';
+  
   // Special treatments for different roles
   const hasSpecialBackground = isRevealed && (
     role === 'werewolf' || 
@@ -89,7 +92,8 @@ const Card: React.FC<CardProps> = ({
     role === 'drunk' || 
     role === 'troublemaker' ||
     role === 'villager' ||
-    role === 'insomniac'
+    role === 'insomniac' ||
+    role === 'minion'
   );
   
   // Determine if this is a large card (either by size prop or className containing scale)
@@ -127,7 +131,9 @@ const Card: React.FC<CardProps> = ({
                     '0 0 30px rgba(216, 80, 152, 0.6), 0 0 60px rgba(216, 80, 152, 0.3)' :
                     role === 'insomniac' ?
                       '0 0 30px rgba(67, 56, 202, 0.6), 0 0 60px rgba(67, 56, 202, 0.3)' :
-                      '0 0 30px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)', 
+                      role === 'minion' ?
+                        '0 0 30px rgba(220, 38, 38, 0.6), 0 0 60px rgba(220, 38, 38, 0.3)' :
+                        '0 0 30px rgba(59, 130, 246, 0.6), 0 0 60px rgba(59, 130, 246, 0.3)', 
           border: role === 'werewolf' ?
             '1px solid rgba(220, 38, 38, 0.5)' : 
             role === 'seer' ?
@@ -140,7 +146,9 @@ const Card: React.FC<CardProps> = ({
                     '1px solid rgba(216, 80, 152, 0.5)' :
                     role === 'insomniac' ?
                       '1px solid rgba(67, 56, 202, 0.5)' :
-                      '1px solid rgba(59, 130, 246, 0.5)'
+                      role === 'minion' ?
+                        '1px solid rgba(220, 38, 38, 0.5)' :
+                        '1px solid rgba(59, 130, 246, 0.5)'
         } : {}}
       >
         {/* Card Back Pattern */}
@@ -235,6 +243,18 @@ const Card: React.FC<CardProps> = ({
           </div>
         )}
 
+        {/* Minion Image */}
+        {showMinionImage && (
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <img 
+              src="/images/minion.jpg" 
+              alt="Minion" 
+              className="absolute w-full h-full object-contain opacity-95"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-pink-950 via-pink-950/30 to-transparent" />
+          </div>
+        )}
+
         <div className="h-full w-full flex flex-col justify-between p-2 relative z-10">
           {isRevealed && role ? (
             <>
@@ -248,8 +268,8 @@ const Card: React.FC<CardProps> = ({
                    role === 'drunk' ? 'D' : 
                    role === 'insomniac' ? 'I' : 
                    role === 'hunter' ? 'H' : 
-                   role === 'mason' ? 'M' : 
-                   role === 'tanner' ? 'T' : 'V'}
+                   role === 'minion' ? 'M' : 
+                   role.charAt(0).toUpperCase()}
                 </div>
                 
                 {size !== 'sm' && (
@@ -260,7 +280,7 @@ const Card: React.FC<CardProps> = ({
               </div>
               
               {/* Middle section - empty for small cards or with description for large cards */}
-              {size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage && !showDrunkImage && !showTroublemakerImage && !showVillagerImage && !showInsomniacImage && (
+              {size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage && !showDrunkImage && !showTroublemakerImage && !showVillagerImage && !showInsomniacImage && !showMinionImage && (
                 <div className="flex-1 flex items-center justify-center text-center">
                   <div className="w-32 h-32 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
                     {/* Role icon could go here */}
@@ -272,12 +292,12 @@ const Card: React.FC<CardProps> = ({
               )}
               
               {/* Bottom section with role name */}
-              <div className={`text-center ${(showWerewolfImage || showSeerImage || showRobberImage || showDrunkImage || showTroublemakerImage || showVillagerImage || showInsomniacImage) ? 'bg-black/60 -mx-2 -mb-2 px-3 py-3 rounded-b-lg backdrop-blur-md' : ''}`}>
+              <div className={`text-center ${(showWerewolfImage || showSeerImage || showRobberImage || showDrunkImage || showTroublemakerImage || showVillagerImage || showInsomniacImage || showMinionImage) ? 'bg-black/60 -mx-2 -mb-2 px-3 py-3 rounded-b-lg backdrop-blur-md' : ''}`}>
                 <h3 className={`font-bold text-white ${isLargeCard ? 'text-3xl mb-2' : 'text-base'}`}>
                   {roleData[role].name}
                 </h3>
                 
-                {!hideDescription && ((size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage && !showDrunkImage && !showTroublemakerImage && !showVillagerImage && !showInsomniacImage) || showWerewolfImage || showSeerImage || showRobberImage || showDrunkImage || showTroublemakerImage || showVillagerImage || showInsomniacImage) && (
+                {!hideDescription && ((size === 'lg' && !showWerewolfImage && !showSeerImage && !showRobberImage && !showDrunkImage && !showTroublemakerImage && !showVillagerImage && !showInsomniacImage && !showMinionImage) || showWerewolfImage || showSeerImage || showRobberImage || showDrunkImage || showTroublemakerImage || showVillagerImage || showInsomniacImage || showMinionImage) && (
                   <p className={`${isLargeCard ? 'text-base leading-snug' : 'text-xs'} mt-1 text-center text-gray-300`}>
                     {roleData[role].description}
                   </p>

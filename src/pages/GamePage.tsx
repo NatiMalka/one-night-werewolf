@@ -6,9 +6,10 @@ import PlayerList from '../components/PlayerList';
 import ChatBox from '../components/ChatBox';
 import Timer from '../components/Timer';
 import Modal from '../components/Modal';
-import { Role } from '../types';
+import { Role, Team } from '../types';
 import { roleData } from '../utils/gameUtils';
 import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Add styles for the vote animations
 const voteAnimationStyles = `
@@ -157,6 +158,8 @@ const ConfirmationModal = ({
 };
 
 const GamePage: React.FC = () => {
+  const navigate = useNavigate();
+  const { roomCode } = useParams();
   const { 
     gameRoom, 
     currentPlayer, 
@@ -171,7 +174,6 @@ const GamePage: React.FC = () => {
     startVotingPhase
   } = useGame();
   
-  // Add comment to address unused variables that will be needed for future implementation
   // These state variables will be used in the future to implement the specific role actions
   // They're declared upfront to ensure consistency across the component
   const [seerSelection, setSeerSelection] = useState<{ type: 'player' | 'center', targets: string[] }>({
@@ -184,6 +186,8 @@ const GamePage: React.FC = () => {
   const [troublemakerTargets, setTroublemakerTargets] = useState<string[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [drunkTarget, setDrunkTarget] = useState<string>('');
+  const [doppelgangerTarget, setDoppelgangerTarget] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
   
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [showActionModal, setShowActionModal] = useState(false);
@@ -204,6 +208,15 @@ const GamePage: React.FC = () => {
     message: '',
     onConfirm: () => {},
   });
+  
+  // Helper function to show toast messages
+  const showToast = (message: string) => {
+    setToast(message);
+    // Auto-close toast after 3 seconds
+    setTimeout(() => {
+      setToast(null);
+    }, 3000);
+  };
   
   // Show role modal automatically when night phase begins
   useEffect(() => {
@@ -271,6 +284,9 @@ const GamePage: React.FC = () => {
     originalRole && 
     roleData[originalRole as Role].nightAction === gameRoom.currentNightAction;
     
+  // Determine if the current player is the one who should perform the action
+  const isCurrentActionPlayer = canPerformAction;
+  
   // Check if the role allows player to view their card during the night
   const canViewRoleDuringNight = 
     originalRole === 'seer' || 
@@ -291,24 +307,40 @@ const GamePage: React.FC = () => {
   
   // Handle night action submission
   const handleNightActionSubmit = () => {
-    if (!gameRoom.currentNightAction) return;
+    const action = gameRoom.currentNightAction;
     
-    switch (gameRoom.currentNightAction) {
+    if (!action) return;
+    
+    if (!isCurrentActionPlayer) {
+      console.error("Not the current action player!");
+      return;
+    }
+    
+    console.log("Submitting night action:", action);
+    setSubmitting(true);
+    
+    switch (action) {
       case 'werewolves':
         performNightAction('werewolves', {});
         break;
-        
+      
+      case 'minion':
+        performNightAction('minion', {});
+        break;
+      
       case 'seer':
-        if (seerSelection.type === 'player' && seerSelection.targets.length === 1) {
-          performNightAction('seer', { 
-            targetType: 'player', 
-            targetId: seerSelection.targets[0] 
+        if (
+          (seerSelection.type === 'player' && seerSelection.targets.length === 1) ||
+          (seerSelection.type === 'center' && seerSelection.targets.length === 2)
+        ) {
+          performNightAction('seer', {
+            selectType: seerSelection.type,
+            targets: seerSelection.targets
           });
-        } else if (seerSelection.type === 'center' && seerSelection.targets.length === 2) {
-          performNightAction('seer', { 
-            targetType: 'center', 
-            targetIds: seerSelection.targets 
-          });
+        } else {
+          setSubmitting(false);
+          showToast("Please make a valid selection.");
+          return;
         }
         break;
         
@@ -325,29 +357,60 @@ const GamePage: React.FC = () => {
             originalRobberRole: currentRole 
           });
           
-          // Show a custom toast notification instead of browser alert
+          // Show a custom toast notification
           setToast(`You've successfully robbed ${targetPlayer?.name}! You'll be able to see your new role later by clicking on "View Your Role".`);
+        } else {
+          setSubmitting(false);
+          showToast("Please select a player to rob.");
+          return;
         }
         break;
-        
+      
       case 'troublemaker':
         if (troublemakerTargets.length === 2) {
           performNightAction('troublemaker', { 
             player1Id: troublemakerTargets[0], 
             player2Id: troublemakerTargets[1] 
           });
+        } else {
+          setSubmitting(false);
+          showToast("Please select two players to swap.");
+          return;
         }
         break;
         
       case 'drunk':
         if (drunkTarget) {
           performNightAction('drunk', { centerCardId: drunkTarget });
+        } else {
+          setSubmitting(false);
+          showToast("Please select a center card.");
+          return;
         }
+        break;
+        
+      case 'mason':
+        performNightAction('mason', {});
         break;
         
       case 'insomniac':
         performNightAction('insomniac', {});
         break;
+        
+      case 'doppelganger':
+        if (doppelgangerTarget) {
+          performNightAction('doppelganger', { targetPlayerId: doppelgangerTarget });
+        } else {
+          setSubmitting(false);
+          showToast("Please select a player to copy.");
+          return;
+        }
+        break;
+        
+      default:
+        console.error("Unknown night action:", action);
+        setSubmitting(false);
+        return;
     }
     
     setShowActionModal(false);
@@ -1892,6 +1955,46 @@ const GamePage: React.FC = () => {
                 <p className="text-yellow-400">You are the only werewolf!</p>
               </div>
             )}
+          </div>
+        );
+        break;
+      }
+      
+      case 'minion': {
+        // Show all werewolves to the minion
+        const allWerewolves = gameRoom.players.filter(
+          p => p.originalRole === 'werewolf'
+        );
+        
+        actionContent = (
+          <div>
+            <p className="text-gray-300 mb-4">
+              As the Minion, you serve the Werewolves. You will now see who the Werewolves are, but they will not know you are the Minion.
+            </p>
+            
+            {allWerewolves.length > 0 ? (
+              <div>
+                <h4 className="font-semibold text-white mb-2">The Werewolves are:</h4>
+                <ul className="bg-gray-800 rounded-lg p-3 mb-4">
+                  {allWerewolves.map(player => (
+                    <li key={player.id} className="text-red-400">
+                      {player.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div className="bg-gray-800 rounded-lg p-3 mb-4">
+                <p className="text-yellow-400">There are no Werewolves among the players! All Werewolf cards are in the center.</p>
+                <p className="text-gray-300 mt-2">
+                  Your goal is now to get any other player eliminated during the day vote.
+                </p>
+              </div>
+            )}
+            
+            <p className="text-yellow-400 mt-4 text-sm">
+              Remember: You win if the Werewolves win, even if you are eliminated!
+            </p>
           </div>
         );
         break;

@@ -174,7 +174,27 @@ export const didWerewolfWin = (players: Player[], voteCounts: Record<string, num
   const maxVotes = Math.max(...Object.values(voteCounts));
   const votedOutIds = Object.keys(voteCounts).filter(id => voteCounts[id] === maxVotes);
   
-  // Check if no werewolf was voted out (neither player nor center card)
+  // Check if any werewolves are in play
+  const anyWerewolfInPlay = players.some(p => p.currentRole === 'werewolf');
+  
+  // Special case: If no werewolves are in play (all in center) but a minion is in play
+  const minionInPlay = players.some(p => p.currentRole === 'minion');
+  
+  if (!anyWerewolfInPlay && minionInPlay) {
+    // If no werewolves in play, minion wins if ANY other player (who is not the minion) is voted out
+    const anyNonMinionVotedOut = votedOutIds.some(id => {
+      if (id.startsWith('center-')) {
+        return false; // Center cards don't count for this win condition
+      } else {
+        const player = players.find(p => p.id === id);
+        return player && player.currentRole !== 'minion';
+      }
+    });
+    
+    return anyNonMinionVotedOut;
+  }
+  
+  // Regular werewolf win condition: Check if no werewolf was voted out
   for (const id of votedOutIds) {
     if (id.startsWith('center-') && centerCards) {
       // Check center cards
@@ -191,6 +211,11 @@ export const didWerewolfWin = (players: Player[], voteCounts: Record<string, num
         return false; // A werewolf player was found, werewolves lose
       }
     }
+  }
+  
+  // If no werewolves in play and no player was eliminated, village team wins
+  if (!anyWerewolfInPlay && minionInPlay && votedOutIds.length === 0) {
+    return false;
   }
   
   return true;

@@ -696,6 +696,12 @@ class FirebaseGameService {
           if (tannerWins) {
             winningTeam = 'tanner';
           } else {
+            // Check if any werewolves are in play
+            const anyWerewolfInPlay = players.some(p => p.currentRole === 'werewolf');
+            
+            // Check if minion is in play
+            const minionInPlay = players.some(p => p.currentRole === 'minion');
+            
             // Check if any werewolf was eliminated (player or center card)
             const werewolfEliminated = eliminatedIds.some(id => {
               if (id.startsWith('center-')) {
@@ -709,9 +715,25 @@ class FirebaseGameService {
               }
             });
             
-            // If any werewolf was eliminated, village wins
-            // Otherwise, werewolf team wins
-            winningTeam = werewolfEliminated ? 'village' : 'werewolf';
+            // Special minion win condition when no werewolves are in play
+            if (!anyWerewolfInPlay && minionInPlay) {
+              // If no werewolves in play, minion wins if ANY other player (who is not the minion) is voted out
+              const anyNonMinionEliminated = eliminatedIds.some(id => {
+                if (id.startsWith('center-')) {
+                  return false; // Center cards don't count for this win condition
+                } else {
+                  const player = players.find(p => p.id === id);
+                  return player && player.currentRole !== 'minion';
+                }
+              });
+              
+              // Minion (werewolf team) wins if any non-minion is eliminated
+              // Village wins if no one is eliminated
+              winningTeam = anyNonMinionEliminated ? 'werewolf' : 'village';
+            } else {
+              // Regular werewolf win condition: werewolves win if no werewolf was eliminated
+              winningTeam = werewolfEliminated ? 'village' : 'werewolf';
+            }
           }
           
           // Update room with results

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Role, roleData } from '../utils/gameUtils';
+import { Role } from '../types';
+import { roleData } from '../utils/gameUtils';
 import Button from './Button';
 
 interface RoleSelectionProps {
@@ -51,7 +52,9 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
       insomniac: 0,
       tanner: 0,
       hunter: 0,
-      mason: 0
+      mason: 0,
+      minion: 0,
+      doppelganger: 0
     };
     
     selectedRoles.forEach(role => {
@@ -186,7 +189,9 @@ const RoleSelection: React.FC<RoleSelectionProps> = ({
               insomniac: totalCards > (playerCount + 3) ? 1 : 0,
               tanner: totalCards > (playerCount + 4) ? 1 : 0,
               hunter: totalCards > (playerCount + 5) ? 1 : 0,
-              mason: 0
+              mason: 0,
+              minion: 0,
+              doppelganger: 0
             };
             
             setCounts(initial);

@@ -204,6 +204,19 @@ const LobbyPage: React.FC = () => {
                     )}
                   </div>
                   
+                  {/* Game Settings */}
+                  <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 border border-purple-800/30">
+                    <p className="text-blue-300 font-medium mb-3 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Game Settings
+                    </p>
+                    
+                    <VoiceNarrationToggle />
+                  </div>
+                  
                   <div>
                     <div className="flex justify-between text-sm text-gray-400 mb-2">
                       <span className="flex items-center">
@@ -490,6 +503,45 @@ const LobbyPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+};
+
+const VoiceNarrationToggle = () => {
+  const { enableVoiceNarration, setEnableVoiceNarration } = useGame();
+  
+  return (
+    <div className="mb-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-gray-300">Voice Narration</span>
+          <div className="relative group">
+            <div className="w-4 h-4 bg-gray-700 text-gray-400 rounded-full flex items-center justify-center text-xs cursor-help">?</div>
+            <div className="hidden group-hover:block absolute left-full ml-2 top-0 bg-gray-800 text-xs text-gray-300 p-2 rounded shadow-lg w-48 z-10">
+              Enable voice narration for night actions. Audio files must be in the /voice folder.
+            </div>
+          </div>
+        </div>
+        
+        <button
+          onClick={() => setEnableVoiceNarration(!enableVoiceNarration)}
+          className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors ${
+            enableVoiceNarration ? 'bg-indigo-600' : 'bg-gray-700'
+          }`}
+        >
+          <span 
+            className={`inline-block w-4 h-4 transform transition-transform bg-white rounded-full ${
+              enableVoiceNarration ? 'translate-x-6' : 'translate-x-1'
+            }`} 
+          />
+        </button>
+      </div>
+      
+      <p className="text-xs text-gray-500 mt-1">
+        {enableVoiceNarration 
+          ? 'Night actions will be narrated with audio' 
+          : 'No audio narration will be played'}
+      </p>
     </div>
   );
 };

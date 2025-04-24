@@ -2,11 +2,13 @@ Accessibility Features:
 Add keyboard navigation for all interactive elements
 Implement screen reader compatibility with proper ARIA attributes
 Add high contrast mode and color blind friendly design options
+
 Enhanced User Experience:
 Add animations for role reveal and night actions to make the game more engaging
 Implement sound effects and background music with volume controls
 Add visual timers and countdowns for night/day phases
 Implement voice chat option in addition to text chat for more immersive gameplay
+
 Game Features:
 Add spectator mode for players who want to watch games
 Implement game history/replay feature to review past games

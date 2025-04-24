@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useGame } from '../contexts/GameContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
@@ -6,10 +6,11 @@ import PlayerList from '../components/PlayerList';
 import ChatBox from '../components/ChatBox';
 import Timer from '../components/Timer';
 import Modal from '../components/Modal';
-import { Role, Team } from '../types';
+import { Role, Team, NightAction } from '../types';
 import { roleData } from '../utils/gameUtils';
 import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { NightAudioControls } from '../components/NightAudioControls';
 
 // Add styles for the vote animations
 const voteAnimationStyles = `
@@ -575,6 +576,12 @@ const GamePage: React.FC = () => {
                 </Button>
               </div>
             )}
+            
+            {/* Add Night Audio Controls for all players */}
+            <NightAudioControls 
+              currentNightAction={gameRoom.currentNightAction} 
+              onNarrationEnd={() => console.log('Narration ended')}
+            />
             
             {/* Night Sequence */}
             <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 relative">

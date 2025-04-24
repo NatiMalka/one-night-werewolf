@@ -12,6 +12,8 @@ interface GameContextProps {
   playerVotes: Record<string, number>;
   isLoading: boolean;
   error: string | null;
+  enableVoiceNarration: boolean;
+  setEnableVoiceNarration: (enabled: boolean) => void;
   createRoom: (playerName: string) => Promise<string>;
   joinRoom: (roomCode: string, playerName: string) => Promise<void>;
   leaveRoom: () => void;
@@ -47,6 +49,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [playerVotes, setPlayerVotes] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [enableVoiceNarration, setEnableVoiceNarration] = useState<boolean>(
+    // Default to true, but respect saved preference
+    localStorage.getItem('enableVoiceNarration') !== 'false'
+  );
+  
+  // Save voice narration preference when it changes
+  useEffect(() => {
+    localStorage.setItem('enableVoiceNarration', String(enableVoiceNarration));
+  }, [enableVoiceNarration]);
   
   const navigate = useNavigate();
   
@@ -566,6 +577,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     playerVotes,
     isLoading,
     error,
+    enableVoiceNarration,
+    setEnableVoiceNarration,
     createRoom,
     joinRoom,
     leaveRoom,

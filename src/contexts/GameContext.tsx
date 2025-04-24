@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import firebaseGameService from '../utils/firebaseGameService';
 import { GameRoom, Player, Role, ChatMessage, NightAction } from '../types';
 import { dealRoles } from '../utils/gameUtils';
+import { sanitizeLogForProduction } from '../utils/antiCheat';
 
 interface GameContextProps {
   gameRoom: GameRoom | null;
@@ -103,7 +104,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
           
           // Set up room listener
           const unsubscribe = firebaseGameService.onRoomUpdate(roomCode, (updatedRoom) => {
-            console.log("Room update received:", updatedRoom);
+            sanitizeLogForProduction("Room update received", updatedRoom);
             setGameRoom(updatedRoom);
             
             // Find current player
@@ -183,7 +184,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         return;
       }
       
-      console.log(`Setting up night timer for ${gameRoom.currentNightAction} with ${gameRoom.nightTimeRemaining} seconds`);
+      sanitizeLogForProduction("Setting up night timer", { 
+        action: gameRoom.currentNightAction, 
+        timeRemaining: gameRoom.nightTimeRemaining 
+      });
       
       // Set up timer to update every second
       const timer = setInterval(() => {
@@ -327,7 +331,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     if (!gameRoom) return;
     
     try {
-      console.log("Starting game with selected roles:", selectedRoles);
+      sanitizeLogForProduction("Starting game with selected roles", { selectedRoles });
       
       // Deal roles to players
       const { players: playersWithRoles, centerCards } = dealRoles(
@@ -335,7 +339,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         selectedRoles
       );
       
-      console.log("Roles assigned:", playersWithRoles);
+      sanitizeLogForProduction("Roles assigned", { players: playersWithRoles });
       
       // Create a mapping of player IDs to roles for Firebase
       const playerRolesUpdate: Record<string, unknown> = {};
@@ -372,7 +376,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         antiCache: Date.now().toString()
       };
       
-      console.log("Updating Firebase with roles:", updates);
+      sanitizeLogForProduction("Updating Firebase with roles", updates);
       await firebaseGameService.updateRoomData(gameRoom.code, updates);
       
     } catch (error) {
@@ -390,9 +394,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     }
 
     try {
-      console.log(`Performing night action: ${action} with data:`, actionData);
+      sanitizeLogForProduction(`Performing night action`, { action, actionData });
       await firebaseGameService.performNightAction(gameRoom.code, action, actionData);
-      console.log(`Night action ${action} completed successfully`);
+      sanitizeLogForProduction("Night action completed successfully", { action });
     } catch (error) {
       console.error("Error performing night action:", error);
       setError("Failed to perform night action");

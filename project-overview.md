@@ -155,3 +155,33 @@ From `improvement.txt`:
 - Technical improvements (offline mode, reconnection handling)
 - Game variations (timed mode, tournament mode)
 - Educational features (tutorials, AI bots) 
+
+## Sound Effects Implementation
+
+The game includes a sound effects system for enhanced user experience:
+
+- **UI Sound Effects**: Subtle audio feedback for user interactions
+  - Button Clicks: Subtle click/tap sound when pressing buttons in lobbies and game controls
+  - Toggle Sounds: Distinct sounds for toggle on/off actions
+  - Notification Sounds: Different sounds for success, error, and alert events
+
+- **Sound Management**:
+  - Implemented in `/src/utils/soundEffects.ts`
+  - Volume controls per sound category (UI, Game, Ambient, Voice)
+  - Mute/unmute functionality for all sound categories
+  - Settings stored in localStorage for persistence
+
+- **Sound Files**:
+  - Located in `/public/sounds/` directory
+  - UI sounds in `/public/sounds/ui/` include:
+    - button-click.mp3
+    - toggle-on.mp3
+    - toggle-off.mp3
+    - error.mp3
+    - success.mp3
+    - alert.mp3
+
+- **Integration**:
+  - Button component automatically plays click sounds when pressed
+  - Toggle components play appropriate sounds when state changes
+  - Notification system uses corresponding sounds for different message types 

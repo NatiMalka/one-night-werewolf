@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './contexts/GameContext';
+import { PlayerAuthProvider } from './contexts/PlayerAuthContext';
 import HomePage from './pages/HomePage';
 import RoomPage from './pages/RoomPage';
+import ProfilePage from './pages/ProfilePage';
 import { setupConsoleAntiCheat } from './utils/antiCheat';
 
 function App() {
@@ -70,14 +72,17 @@ function App() {
         </div>
       )}
       <BrowserRouter>
-        <GameProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/room/:roomCode" element={<RoomPage />} />
-            {/* Catch-all route to redirect to home */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </GameProvider>
+        <PlayerAuthProvider>
+          <GameProvider>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/room/:roomCode" element={<RoomPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              {/* Catch-all route to redirect to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </GameProvider>
+        </PlayerAuthProvider>
       </BrowserRouter>
     </div>
   );

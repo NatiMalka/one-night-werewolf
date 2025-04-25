@@ -4,12 +4,16 @@ import { useGame } from '../contexts/GameContext';
 import LobbyPage from './LobbyPage';
 import GamePage from './GamePage';
 import LoadingScreen from '../components/LoadingScreen';
+import useGameProfileIntegration from '../hooks/useGameProfileIntegration';
 
 const RoomPage: React.FC = () => {
   const { roomCode: paramRoomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
   const { gameRoom, currentPlayer, isLoading, error } = useGame();
   const [connecting, setConnecting] = useState(true);
+  
+  // Use the game profile integration hook to track stats and achievements
+  useGameProfileIntegration();
   
   // Extract room code from URL in case useParams fails
   const getRoomCodeFromURL = (): string | null => {

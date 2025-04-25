@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../contexts/GameContext';
 import Button from '../components/Button';
-import { ArrowRight, Moon } from 'lucide-react';
+import { ArrowRight, Moon, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Star {
@@ -140,6 +140,21 @@ const HomePage: React.FC = () => {
         <div className="absolute top-0 left-[10%] w-72 h-72 bg-purple-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
         <div className="absolute top-0 right-[20%] w-96 h-96 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-1/4 left-[30%] w-80 h-80 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-15 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      {/* Profile link */}
+      <div className="absolute top-6 right-6 z-20 group">
+        <button 
+          onClick={() => navigate('/profile')}
+          className="p-2 rounded-full bg-indigo-600/30 text-indigo-300 hover:bg-indigo-600/50 hover:text-white transition-colors"
+          title="Profile & Stats"
+        >
+          <User size={20} />
+        </button>
+        <div className="absolute right-0 mt-2 w-56 bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg p-3 transform opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 border border-gray-800 text-sm pointer-events-none">
+          <p className="text-indigo-200 font-medium">Profile & Stats</p>
+          <p className="text-gray-400 mt-1">Track your achievements and game stats with a guest profile - no registration required!</p>
+        </div>
       </div>
       
       {/* Moon icon in the background */}

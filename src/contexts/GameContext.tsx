@@ -5,6 +5,7 @@ import firebaseGameService from '../utils/firebaseGameService';
 import { GameRoom, Player, Role, ChatMessage, NightAction } from '../types';
 import { dealRoles } from '../utils/gameUtils';
 import { sanitizeLogForProduction } from '../utils/antiCheat';
+import { usePlayerAuth } from './PlayerAuthContext';
 
 interface GameContextProps {
   gameRoom: GameRoom | null;
@@ -54,6 +55,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     // Default to true, but respect saved preference
     localStorage.getItem('enableVoiceNarration') !== 'false'
   );
+  
+  // Get player auth data
+  const { playerAuth } = usePlayerAuth();
   
   // Save voice narration preference when it changes
   useEffect(() => {
@@ -256,16 +260,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
       const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       const playerId = uuidv4();
       
+      // Use authenticated player profile if available
+      let avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${playerId}`;
+      let displayName = playerName;
+      
+      if (playerAuth.isAuthenticated && playerAuth.profile) {
+        // Use profile data for authenticated users
+        avatar = playerAuth.profile.avatar;
+        // Use provided name or fall back to profile display name
+        displayName = playerName.trim() ? playerName : playerAuth.profile.displayName;
+      }
+      
       const player: Player = {
         id: playerId,
-        name: playerName,
+        name: displayName,
         isHost: true,
         isReady: false,
         originalRole: null,
         currentRole: null,
         votedFor: null,
         isConnected: true,
-        avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${playerId}`
+        avatar
       };
       
       await firebaseGameService.joinRoom(roomCode, player);
@@ -286,16 +301,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     try {
       const playerId = uuidv4();
       
+      // Use authenticated player profile if available
+      let avatar = `https://api.dicebear.com/7.x/adventurer/svg?seed=${playerId}`;
+      let displayName = playerName;
+      
+      if (playerAuth.isAuthenticated && playerAuth.profile) {
+        // Use profile data for authenticated users
+        avatar = playerAuth.profile.avatar;
+        // Use provided name or fall back to profile display name
+        displayName = playerName.trim() ? playerName : playerAuth.profile.displayName;
+      }
+      
       const player: Player = {
         id: playerId,
-        name: playerName,
+        name: displayName,
         isHost: false,
         isReady: false,
         originalRole: null,
         currentRole: null,
         votedFor: null,
         isConnected: true,
-        avatar: `https://api.dicebear.com/7.x/adventurer/svg?seed=${playerId}`
+        avatar
       };
       
       await firebaseGameService.joinRoom(roomCode, player);

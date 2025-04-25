@@ -88,3 +88,48 @@ export type ActionResult = {
   success: boolean;
   message: string;
 };
+
+export type Stat = {
+  id: string;
+  name: string;
+  value: number;
+  icon: string;
+};
+
+export type Achievement = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  isUnlocked: boolean;
+  progress?: number;
+  maxProgress?: number;
+  unlockedAt?: number;
+};
+
+export type PlayerProfile = {
+  id: string;
+  displayName: string;
+  email?: string;
+  avatar: string;
+  createdAt: number;
+  lastLoginAt: number;
+  stats: Stat[];
+  achievements: Achievement[];
+  gamesPlayed: number;
+  gamesWon: number;
+  favoriteRole?: Role;
+  badges: string[];
+  customization: {
+    theme: string;
+    avatarFrame?: string;
+    nameColor?: string;
+  };
+};
+
+export type PlayerAuth = {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  profile: PlayerProfile | null;
+  error: string | null;
+};

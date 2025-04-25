@@ -240,11 +240,19 @@ const useGameProfileIntegration = () => {
   // Helper to update player profile
   const updateProfile = async (updates: Partial<PlayerProfile>) => {
     try {
-      if (!playerAuth.profile || !playerAuth.isAuthenticated) return;
+      if (!playerAuth.profile || !playerAuth.isAuthenticated) {
+        console.warn("❌ Cannot update profile: No authenticated player profile");
+        return;
+      }
       
+      console.log("🔄 Updating player profile with:", updates);
+      
+      // Make sure we're calling the function from context, not recursively
       await updatePlayerProfile(updates);
+      
+      console.log("✅ Player profile updated successfully");
     } catch (error) {
-      console.error('Error updating player profile:', error);
+      console.error('❌ Error updating player profile:', error);
     }
   };
 };

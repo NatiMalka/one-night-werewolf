@@ -11,6 +11,7 @@ import { roleData } from '../utils/gameUtils';
 import { ArrowLeft, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NightAudioControls } from '../components/NightAudioControls';
+import useGameProfileIntegration from '../hooks/useGameProfileIntegration';
 
 // Add styles for the vote animations
 const voteAnimationStyles = `
@@ -174,6 +175,9 @@ const GamePage: React.FC = () => {
     skipCurrentNightAction,
     startVotingPhase
   } = useGame();
+  
+  // Use the profile integration hook to track stats and achievements
+  useGameProfileIntegration();
   
   // These state variables will be used in the future to implement the specific role actions
   // They're declared upfront to ensure consistency across the component

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { usePlayerAuth } from '../contexts/PlayerAuthContext';
 import { GameRoom, Role, Team } from '../types';
+import { PlayerProfile } from '../types';
 
 /**
  * Hook for tracking player stats and achievements during gameplay
@@ -104,7 +105,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
       });
       
       // Update in database
-      await updatePlayerProfile({ achievements: updatedAchievements });
+      await updateProfileData({ achievements: updatedAchievements });
     }
   };
 
@@ -129,7 +130,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
       });
       
       // Update in database
-      await updatePlayerProfile({ achievements: updatedAchievements });
+      await updateProfileData({ achievements: updatedAchievements });
     }
   };
 
@@ -154,7 +155,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
       });
       
       // Update in database
-      await updatePlayerProfile({ achievements: updatedAchievements });
+      await updateProfileData({ achievements: updatedAchievements });
     }
   };
 
@@ -179,7 +180,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
       });
       
       // Update in database
-      await updatePlayerProfile({ achievements: updatedAchievements });
+      await updateProfileData({ achievements: updatedAchievements });
     }
   };
 
@@ -204,7 +205,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
       });
       
       // Update in database
-      await updatePlayerProfile({ achievements: updatedAchievements });
+      await updateProfileData({ achievements: updatedAchievements });
     }
   };
 
@@ -213,7 +214,7 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
     if (!playerAuth.profile) return;
     
     const currentGamesPlayed = playerAuth.profile.gamesPlayed;
-    await updatePlayerProfile({ gamesPlayed: currentGamesPlayed + 1 });
+    await updateProfileData({ gamesPlayed: currentGamesPlayed + 1 });
   };
 
   // Helper to update games won in profile
@@ -221,18 +222,26 @@ const usePlayerStats = (gameRoom: GameRoom | null, playerId: string | null) => {
     if (!playerAuth.profile) return;
     
     const currentGamesWon = playerAuth.profile.gamesWon;
-    await updatePlayerProfile({ gamesWon: currentGamesWon + 1 });
+    await updateProfileData({ gamesWon: currentGamesWon + 1 });
   };
 
   // Helper function to update player profile
-  const updatePlayerProfile = async (updates: Partial<typeof playerAuth.profile>) => {
+  const updateProfileData = async (updates: Partial<PlayerProfile>) => {
     try {
-      if (!playerAuth.profile) return;
+      if (!playerAuth.profile) {
+        console.warn("❌ Cannot update profile: No player profile available");
+        return;
+      }
+      
+      // Get the correct function from the context
+      const { updatePlayerProfile } = usePlayerAuth();
       
       // Update profile through context
+      console.log("🔄 Updating player profile with:", updates);
       await updatePlayerProfile(updates);
+      console.log("✅ Player profile update successful");
     } catch (error) {
-      console.error('Error updating player profile:', error);
+      console.error('❌ Error updating player profile:', error);
     }
   };
 };

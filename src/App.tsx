@@ -73,15 +73,15 @@ function App() {
       )}
       <BrowserRouter>
         <PlayerAuthProvider>
-          <GameProvider>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/room/:roomCode" element={<RoomPage />} />
+        <GameProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/room/:roomCode" element={<RoomPage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              {/* Catch-all route to redirect to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </GameProvider>
+            {/* Catch-all route to redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </GameProvider>
         </PlayerAuthProvider>
       </BrowserRouter>
     </div>

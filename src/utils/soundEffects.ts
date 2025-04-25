@@ -48,7 +48,29 @@ export const SOUND_EFFECTS = {
     src: '/sounds/ui/success.mp3',
     volume: 0.6,
     category: SoundCategory.UI
+  },
+  ACHIEVEMENT_UNLOCK: {
+    src: '/sounds/Achievements.mp3',
+    volume: 0.7,
+    category: SoundCategory.GAME
+  },
+  GAME_START: {
+    src: '/sounds/game-start.mp3',
+    volume: 0.7,
+    category: SoundCategory.GAME
+  },
+  GAME_END: {
+    src: '/sounds/game-end.mp3',
+    volume: 0.7,
+    category: SoundCategory.GAME
   }
+};
+
+// Sound ID mapping for backward compatibility
+const SOUND_ID_MAPPING: Record<string, keyof typeof SOUND_EFFECTS> = {
+  'achievement-unlock': 'ACHIEVEMENT_UNLOCK',
+  'game-start': 'GAME_START',
+  'game-end': 'GAME_END'
 };
 
 // Interface for sound settings
@@ -171,96 +193,134 @@ async function loadAudio(url: string): Promise<AudioBuffer> {
   }
 }
 
-// Play sound with given settings
-export async function playSound(
-  url: string, 
-  category: SoundCategory, 
-  options: { 
-    volume?: number, 
-    loop?: boolean,
-    rate?: number,
-    detune?: number
-  } = {}
-): Promise<{ stop: () => void }> {
+// Sounds cache for HTML Audio elements
+const sounds: Record<string, HTMLAudioElement> = {};
+
+/**
+ * Plays a sound effect
+ * @param soundId - The ID of the sound to play
+ * @param volume - Optional volume (0.0 to 1.0)
+ */
+export const playSound = (soundId: string, volume = 0.5): void => {
   try {
-    // Check if master muted
-    if (currentSettings.masterMuted) {
-      return { stop: () => {} };
+    // Handle kebab-case sound IDs for backward compatibility
+    const effectKey = SOUND_ID_MAPPING[soundId] || soundId as keyof typeof SOUND_EFFECTS;
+    const effect = SOUND_EFFECTS[effectKey];
+    
+    if (!effect) {
+      console.warn(`Sound "${soundId}" is not defined`);
+      return;
     }
     
-    // Check if category muted
-    if (currentSettings.mutedCategories[category]) {
-      return { stop: () => {} };
+    if (!sounds[soundId]) {
+      // Create and cache the audio element for this sound
+      sounds[soundId] = new Audio(typeof effect === 'string' ? effect : effect.src);
     }
     
-    const context = initializeAudioContext();
-    const buffer = await loadAudio(url);
+    // Reset the audio to the beginning (in case it's already playing)
+    sounds[soundId].currentTime = 0;
     
-    // Create source and gain nodes
-    const source = context.createBufferSource();
-    const gainNode = context.createGain();
+    // Set volume and play
+    const effectVolume = typeof effect === 'object' ? effect.volume : 0.5;
+    const category = typeof effect === 'object' ? effect.category : SoundCategory.UI;
     
-    // Connect nodes
-    source.connect(gainNode);
-    gainNode.connect(context.destination);
-    
-    // Set buffer and options
-    source.buffer = buffer;
-    if (options.loop !== undefined) source.loop = options.loop;
-    if (options.rate !== undefined) source.playbackRate.value = options.rate;
-    if (options.detune !== undefined) source.detune.value = options.detune;
-    
-    // Calculate volume
+    // Calculate effective volume
     const masterVolume = currentSettings.masterVolume;
     const categoryVolume = currentSettings.categoryVolumes[category];
-    const specificVolume = options.volume !== undefined ? options.volume : 1;
-    const finalVolume = masterVolume * categoryVolume * specificVolume;
+    const finalVolume = masterVolume * categoryVolume * effectVolume * volume;
     
-    // Set volume
-    gainNode.gain.value = finalVolume;
+    // Check if sound should be muted
+    if (currentSettings.masterMuted || currentSettings.mutedCategories[category]) {
+      return;
+    }
     
-    // Start playback
-    source.start(0);
-    
-    // Return stop function
-    return {
-      stop: () => {
-        try {
-          source.stop();
-        } catch (err) {
-          // Ignore errors when stopping (might already be stopped)
-        }
-      }
-    };
+    sounds[soundId].volume = finalVolume;
+    sounds[soundId].play().catch(error => {
+      // Browsers may block autoplay, so we catch the error
+      console.warn(`Failed to play sound "${soundId}":`, error);
+    });
   } catch (error) {
-    console.error(`Error playing sound ${url}:`, error);
-    return { stop: () => {} };
+    console.warn(`Error playing sound "${soundId}":`, error);
   }
-}
+};
+
+/**
+ * Preloads a sound for immediate playback later
+ * @param soundId - The ID of the sound to preload
+ */
+export const preloadSound = (soundId: string): void => {
+  try {
+    // Handle kebab-case sound IDs for backward compatibility
+    const effectKey = SOUND_ID_MAPPING[soundId] || soundId as keyof typeof SOUND_EFFECTS;
+    const effect = SOUND_EFFECTS[effectKey];
+    
+    if (!effect) {
+      console.warn(`Cannot preload: Sound "${soundId}" is not defined`);
+      return;
+    }
+    
+    if (!sounds[soundId]) {
+      sounds[soundId] = new Audio(typeof effect === 'string' ? effect : effect.src);
+      sounds[soundId].load();
+    }
+  } catch (error) {
+    console.warn(`Error preloading sound "${soundId}":`, error);
+  }
+};
+
+/**
+ * Preloads all sounds for immediate playback
+ */
+export const preloadAllSounds = (): void => {
+  // Preload all sounds using their key names
+  Object.keys(SOUND_EFFECTS).forEach(key => {
+    const effect = SOUND_EFFECTS[key as keyof typeof SOUND_EFFECTS];
+    if (!sounds[key]) {
+      sounds[key] = new Audio(typeof effect === 'string' ? effect : effect.src);
+      sounds[key].load();
+    }
+  });
+  
+  // Also preload any kebab-case aliases
+  Object.keys(SOUND_ID_MAPPING).forEach(alias => {
+    if (!sounds[alias]) {
+      const mappedKey = SOUND_ID_MAPPING[alias];
+      const effect = SOUND_EFFECTS[mappedKey];
+      sounds[alias] = new Audio(typeof effect === 'string' ? effect : effect.src);
+      sounds[alias].load();
+    }
+  });
+};
 
 // Convenience functions for common UI sounds
-export async function playButtonClickSound(): Promise<void> {
-  await playSound('/sounds/ui/button-click.mp3', SoundCategory.UI);
+export function playButtonClickSound(): Promise<void> {
+  playSound('BUTTON_CLICK');
+  return Promise.resolve();
 }
 
-export async function playToggleOnSound(): Promise<void> {
-  await playSound('/sounds/ui/toggle-on.mp3', SoundCategory.UI);
+export function playToggleOnSound(): Promise<void> {
+  playSound('TOGGLE_ON');
+  return Promise.resolve();
 }
 
-export async function playToggleOffSound(): Promise<void> {
-  await playSound('/sounds/ui/toggle-off.mp3', SoundCategory.UI);
+export function playToggleOffSound(): Promise<void> {
+  playSound('TOGGLE_OFF');
+  return Promise.resolve();
 }
 
-export async function playAlertSound(): Promise<void> {
-  await playSound('/sounds/ui/alert.mp3', SoundCategory.UI, { volume: 0.6 });
+export function playAlertSound(): Promise<void> {
+  playSound('ERROR', 0.6);
+  return Promise.resolve();
 }
 
-export async function playErrorSound(): Promise<void> {
-  await playSound('/sounds/ui/error.mp3', SoundCategory.UI, { volume: 0.6 });
+export function playErrorSound(): Promise<void> {
+  playSound('ERROR', 0.6);
+  return Promise.resolve();
 }
 
-export async function playSuccessSound(): Promise<void> {
-  await playSound('/sounds/ui/success.mp3', SoundCategory.UI, { volume: 0.6 });
+export function playSuccessSound(): Promise<void> {
+  playSound('SUCCESS', 0.6);
+  return Promise.resolve();
 }
 
 // Listen for settings changes from other tabs/windows
@@ -273,69 +333,4 @@ window.addEventListener('storage', (event) => {
       console.error('Error parsing sound settings from storage event:', err);
     }
   }
-});
-
-// Preload a sound
-const preloadSound = (effect: SoundEffect): HTMLAudioElement => {
-  if (!soundCache[effect.src]) {
-    const audio = new Audio(effect.src);
-    audio.volume = 0; // Set to 0 during preload
-    audio.load();
-    soundCache[effect.src] = audio;
-  }
-  return soundCache[effect.src];
-};
-
-// Preload all sounds
-export const preloadAllSounds = () => {
-  Object.values(SOUND_EFFECTS).forEach(effect => {
-    preloadSound(effect);
-  });
-};
-
-// Update the volume based on settings
-const getEffectiveVolume = (effect: SoundEffect): number => {
-  const { masterVolume, categoryVolumes, mutedCategories, masterMuted } = currentSettings;
-  
-  if (masterMuted || mutedCategories[effect.category]) {
-    return 0;
-  }
-  
-  return effect.volume * masterVolume * categoryVolumes[effect.category];
-};
-
-/**
- * Play a sound effect
- * @param effect The sound effect to play
- * @returns A promise that resolves when the sound finishes playing
- */
-export const playSoundEffect = async (effect: SoundEffect): Promise<void> => {
-  // Don't play sound if we're muted
-  if (currentSettings.masterMuted || currentSettings.mutedCategories[effect.category]) {
-    return;
-  }
-  
-  try {
-    // Get or load the audio element
-    const audio = soundCache[effect.src] || preloadSound(effect);
-    
-    // Create a new audio element for concurrent sounds (like rapid button clicks)
-    const soundInstance = new Audio(effect.src);
-    soundInstance.volume = getEffectiveVolume(effect);
-    
-    // Play the sound
-    return new Promise((resolve) => {
-      soundInstance.play();
-      soundInstance.onended = () => resolve();
-    });
-  } catch (error) {
-    console.error('Failed to play sound effect:', error);
-  }
-};
-
-// Convenience methods for common sounds
-export const playButtonClickSoundEffect = () => playSoundEffect(SOUND_EFFECTS.BUTTON_CLICK);
-export const playToggleOnSoundEffect = () => playSoundEffect(SOUND_EFFECTS.TOGGLE_ON);
-export const playToggleOffSoundEffect = () => playSoundEffect(SOUND_EFFECTS.TOGGLE_OFF);
-export const playErrorSoundEffect = () => playSoundEffect(SOUND_EFFECTS.ERROR);
-export const playSuccessSoundEffect = () => playSoundEffect(SOUND_EFFECTS.SUCCESS); 
+}); 

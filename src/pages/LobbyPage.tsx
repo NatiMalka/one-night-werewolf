@@ -275,7 +275,11 @@ const LobbyPage: React.FC = () => {
                       fullWidth
                       variant={currentPlayer.isReady ? 'success' : 'primary'}
                       onClick={handleReadyToggle}
-                      className={`py-3 text-lg transition-all duration-300 ${currentPlayer.isReady ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                      className={`py-3 text-lg transition-all duration-300 ${
+                        currentPlayer.isReady 
+                          ? 'bg-green-600 hover:bg-green-700' 
+                          : 'bg-blue-600 hover:bg-blue-700 animate-pulse-attention relative shadow-lg shadow-blue-500/30'
+                      }`}
                     >
                       <span className="flex items-center justify-center">
                         {currentPlayer.isReady ? (
@@ -285,10 +289,10 @@ const LobbyPage: React.FC = () => {
                           </>
                         ) : (
                           <>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Mark as Ready
+                            Click to Ready Up!
                           </>
                         )}
                       </span>
@@ -393,7 +397,11 @@ const LobbyPage: React.FC = () => {
                     fullWidth
                     variant={currentPlayer.isReady ? 'success' : 'primary'}
                     onClick={handleReadyToggle}
-                    className={`py-3 text-lg transition-all duration-300 ${currentPlayer.isReady ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                    className={`py-3 text-lg transition-all duration-300 ${
+                      currentPlayer.isReady 
+                        ? 'bg-green-600 hover:bg-green-700' 
+                        : 'bg-blue-600 hover:bg-blue-700 animate-pulse-attention relative shadow-lg shadow-blue-500/30'
+                    }`}
                   >
                     <span className="flex items-center justify-center">
                       {currentPlayer.isReady ? (
@@ -403,10 +411,10 @@ const LobbyPage: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          Mark as Ready
+                          Click to Ready Up!
                         </>
                       )}
                     </span>

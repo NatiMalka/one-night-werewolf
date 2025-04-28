@@ -5,11 +5,14 @@ import PlayerList from '../components/PlayerList';
 import RoleSelection from '../components/RoleSelection';
 import Modal from '../components/Modal';
 import { Role } from '../types';
-import { AlertTriangle, Check } from 'lucide-react';
+import { AlertTriangle, Check, HelpCircle, Book } from 'lucide-react';
+import { roleData } from '../utils/gameUtils';
+import Card from '../components/Card';
 
 const LobbyPage: React.FC = () => {
   const { gameRoom, currentPlayer, leaveRoom, startGame, setReady, kickPlayer } = useGame();
   const [showRoleSelection, setShowRoleSelection] = useState(false);
+  const [showRolesGallery, setShowRolesGallery] = useState(false);
   
   // Add state for kick confirmation modal
   const [kickConfirmation, setKickConfirmation] = useState<{
@@ -81,35 +84,50 @@ const LobbyPage: React.FC = () => {
         <div className="absolute inset-0 bg-cover bg-center opacity-10" 
              style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between p-6">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2 flex items-center">
-              <span className="mr-3">🐺</span> Game Lobby
-            </h1>
-            <div className="bg-gray-900/60 backdrop-blur-sm px-3 py-2 rounded-lg inline-flex items-center">
-              <span className="text-gray-400 mr-2">Room Code:</span>
-              <span className="font-mono text-yellow-400 font-bold tracking-wider">{gameRoom.code}</span>
-              <button 
-                className="ml-3 text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-800"
-                onClick={() => navigator.clipboard.writeText(gameRoom.code)}
-                title="Copy code"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                </svg>
-              </button>
+          <div className="flex items-center">
+            <span className="text-4xl mr-3">🐺</span>
+            <div>
+              <h1 className="text-4xl font-bold text-white">Game Lobby</h1>
+              <div className="bg-gray-900/60 backdrop-blur-sm px-3 py-2 mt-2 rounded-lg inline-flex items-center">
+                <span className="text-gray-400 mr-2">Room Code:</span>
+                <span className="font-mono text-yellow-400 font-bold tracking-wider">{gameRoom.code}</span>
+                <button 
+                  className="ml-3 text-gray-400 hover:text-white transition-colors p-1 rounded-md hover:bg-gray-800"
+                  onClick={() => navigator.clipboard.writeText(gameRoom.code)}
+                  title="Copy code"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           
-          <div className="mt-4 md:mt-0">
+          <div className="mt-4 md:mt-0 flex items-center gap-3">
+            <Button 
+              variant="secondary" 
+              onClick={() => setShowRolesGallery(true)}
+              className="h-10 px-4 flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg"
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex items-center justify-center">
+                  <Book size={16} />
+                </span>
+                <span className="text-sm font-medium">Role Guide</span>
+              </div>
+            </Button>
             <Button 
               variant="danger" 
               onClick={leaveRoom}
-              className="px-4 py-2 flex items-center shadow-lg hover:shadow-xl transition-all transform hover:translate-y-[-2px]"
+              className="h-10 px-4 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white rounded-lg"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Leave Game
+              <div className="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span className="text-sm font-medium">Leave Game</span>
+              </div>
             </Button>
           </div>
         </div>
@@ -451,6 +469,34 @@ const LobbyPage: React.FC = () => {
         </div>
       </div>
       
+      {/* Roles Gallery Modal */}
+      <Modal
+        isOpen={showRolesGallery}
+        onClose={() => setShowRolesGallery(false)}
+        title="Roles Gallery"
+        size="xl"
+      >
+        <div className="mb-4 max-h-[70vh] overflow-y-auto pr-2">
+          <div className="bg-indigo-900/30 border border-indigo-700/30 rounded-lg p-3 mb-4 sticky top-0 z-10 backdrop-blur-sm">
+            <p className="text-indigo-300 font-medium flex items-center mb-1">
+              <HelpCircle size={16} className="mr-1" />
+              Role Information
+            </p>
+            <p className="text-gray-300 text-sm">
+              Explore all the roles in the game. Click on a role card to see detailed information.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+            {Object.keys(roleData)
+              .filter(role => role !== 'doppelganger' && role !== 'mason')
+              .map((role) => (
+                <RoleCard key={role} role={role as Role} />
+              ))}
+          </div>
+        </div>
+      </Modal>
+      
       {/* Role Selection Modal */}
       <Modal
         isOpen={showRoleSelection}
@@ -511,6 +557,107 @@ const LobbyPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+};
+
+const RoleCard: React.FC<{ role: Role }> = ({ role }) => {
+  const [expanded, setExpanded] = useState(false);
+  
+  const roleName = roleData[role].name;
+  const roleDescription = roleData[role].description;
+  const teamName = roleData[role].team.charAt(0).toUpperCase() + roleData[role].team.slice(1);
+  
+  const getTeamColor = (team: string) => {
+    if (team === 'werewolf') return 'bg-red-600';
+    if (team === 'village') return 'bg-blue-600';
+    return 'bg-amber-600';
+  };
+  
+  // Map of available images for each role
+  const roleImages: Record<string, string> = {
+    'werewolf': '/images/werewolf.jpg',
+    'villager': '/images/villager.jpg',
+    'seer': '/images/seer.jpg',
+    'robber': '/images/Robber.jpg',
+    'troublemaker': '/images/Troublemaker.jpg',
+    'drunk': '/images/drunk.png',
+    'insomniac': '/images/Insomniac.jpg',
+    'minion': '/images/minion.jpg',
+    'hunter': '/images/hunter.png'
+  };
+  
+  // Check if the role has an image
+  const hasImage = role in roleImages;
+  
+  return (
+    <div 
+      className={`rounded-lg overflow-hidden shadow-lg cursor-pointer transform transition-all duration-300 ${expanded ? 'scale-105 z-10' : 'hover:scale-105'}`}
+      onClick={() => setExpanded(!expanded)}
+    >
+      <div className="relative h-40 bg-gray-800">
+        {hasImage ? (
+          <img 
+            src={roleImages[role]} 
+            alt={roleName} 
+            className="w-full h-full object-cover transform transition-transform duration-300 ease-in-out hover:scale-110"
+            onError={(e) => {
+              // If image fails to load, set a fallback background
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center border border-white/20">
+              <span className="text-white text-4xl font-bold">
+                {roleName.charAt(0)}
+              </span>
+            </div>
+          </div>
+        )}
+        
+        <div className="absolute top-2 right-2">
+          <span className={`text-xs font-bold px-2 py-1 rounded-full text-white ${getTeamColor(roleData[role].team)}`}>
+            {teamName}
+          </span>
+        </div>
+      </div>
+      
+      <div className="p-4 bg-gray-800 border-t border-gray-700">
+        <h3 className="text-xl font-bold text-white mb-1">{roleName}</h3>
+        
+        <div className={`text-gray-300 text-sm overflow-hidden transition-all duration-300 ${expanded ? 'max-h-40' : 'max-h-12'}`}>
+          <p>{roleDescription}</p>
+        </div>
+        
+        {expanded && (
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <h4 className="text-sm font-medium text-gray-400 mb-1">Role Details:</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+              <div>
+                <span className="block text-gray-500">Team:</span>
+                <span className="text-white">{teamName}</span>
+              </div>
+              {roleData[role].nightOrder && (
+                <div>
+                  <span className="block text-gray-500">Night Order:</span>
+                  <span className="text-white">{roleData[role].nightOrder}</span>
+                </div>
+              )}
+              <div>
+                <span className="block text-gray-500">Night Action:</span>
+                <span className="text-white">{roleData[role].nightAction ? 'Yes' : 'No'}</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-2 flex justify-end">
+          <div className="text-xs text-gray-400">
+            {expanded ? 'Click to collapse' : 'Click for details'}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -326,11 +326,11 @@ const GamePage: React.FC = () => {
     
     switch (action) {
       case 'werewolves':
-        performNightAction('werewolves', {});
+        performNightAction('werewolves', { playerId: currentPlayer.id });
         break;
       
       case 'minion':
-        performNightAction('minion', {});
+        performNightAction('minion', { playerId: currentPlayer.id });
         break;
       
       case 'seer':
@@ -340,7 +340,8 @@ const GamePage: React.FC = () => {
         ) {
           performNightAction('seer', {
             selectType: seerSelection.type,
-            targets: seerSelection.targets
+            targets: seerSelection.targets,
+            playerId: currentPlayer.id
           });
         } else {
           setSubmitting(false);
@@ -359,7 +360,8 @@ const GamePage: React.FC = () => {
             targetPlayerId: robberTarget,
             targetPlayerName: targetPlayer?.name,
             targetRole,
-            originalRobberRole: currentRole 
+            originalRobberRole: currentRole,
+            playerId: currentPlayer.id
           });
           
           // Show a custom toast notification
@@ -375,7 +377,8 @@ const GamePage: React.FC = () => {
         if (troublemakerTargets.length === 2) {
           performNightAction('troublemaker', { 
             player1Id: troublemakerTargets[0], 
-            player2Id: troublemakerTargets[1] 
+            player2Id: troublemakerTargets[1],
+            playerId: currentPlayer.id
           });
         } else {
           setSubmitting(false);
@@ -386,7 +389,7 @@ const GamePage: React.FC = () => {
         
       case 'drunk':
         if (drunkTarget) {
-          performNightAction('drunk', { centerCardId: drunkTarget });
+          performNightAction('drunk', { centerCardId: drunkTarget, playerId: currentPlayer.id });
         } else {
           setSubmitting(false);
           showToast("Please select a center card.");
@@ -404,7 +407,7 @@ const GamePage: React.FC = () => {
         
       case 'doppelganger':
         if (doppelgangerTarget) {
-          performNightAction('doppelganger', { targetPlayerId: doppelgangerTarget });
+          performNightAction('doppelganger', { targetPlayerId: doppelgangerTarget, playerId: currentPlayer.id });
         } else {
           setSubmitting(false);
           showToast("Please select a player to copy.");

@@ -430,361 +430,407 @@ const GamePage: React.FC = () => {
     const isHost = currentPlayer.isHost;
     
     return (
-      <div className="container mx-auto px-4 py-8">
-        {/* Header with mystical moon background and timer */}
-        <div className="relative mb-8 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 rounded-xl overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-cover bg-center opacity-30" 
-               style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Background elements - animated gradients and effects */}
+        <div className="fixed inset-0 bg-gray-950 z-0">
+          {/* Main background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-indigo-950 via-purple-950 to-gray-950 opacity-90"></div>
           
-          {/* Animated stars */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="stars-1"></div>
-            <div className="stars-2"></div>
-            <div className="stars-3"></div>
-          </div>
+          {/* Moon glow */}
+          <div className="absolute top-10 right-10 w-40 h-40 bg-yellow-200 rounded-full filter blur-3xl opacity-10 animate-pulse-slow"></div>
           
-          {/* Content */}
-          <div className="relative z-10 flex justify-between items-center p-6">
-            <div>
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <span className="mr-3">🌙</span>
-                Night Phase
-              </h2>
-              <p className="text-purple-200 mt-1">The village sleeps while secret roles are performed</p>
+          {/* Animated blobs representing nocturnal energies */}
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-indigo-700 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-purple-700 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+          
+          {/* Star field effect */}
+          <div className="stars-1"></div>
+          <div className="stars-2"></div>
+          <div className="stars-3"></div>
+          
+          {/* Shooting stars - random positions */}
+          <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-white rounded-full opacity-70 animate-shooting-star"></div>
+          <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white rounded-full opacity-70 animate-shooting-star animation-delay-2000"></div>
+          <div className="absolute bottom-1/3 left-1/2 w-1 h-1 bg-white rounded-full opacity-70 animate-shooting-star animation-delay-4000"></div>
+          
+          {/* Vignette effect */}
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950 via-transparent to-gray-950 opacity-70"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-gray-950 via-transparent to-gray-950 opacity-70"></div>
+        </div>
+        
+        {/* Content */}
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          {/* Header with mystical moon background and timer */}
+          <div className="relative mb-8 bg-gradient-to-r from-purple-900/60 to-indigo-900/60 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md border border-purple-500/20">
+            <div className="absolute inset-0 bg-cover bg-center opacity-20" 
+                 style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+            
+            {/* Animated stars inside header */}
+            <div className="absolute inset-0 overflow-hidden opacity-30">
+              <div className="stars-1"></div>
+              <div className="stars-2"></div>
             </div>
-            <div className="flex items-center">
-              <div className="bg-gray-900/70 backdrop-blur-sm px-6 py-4 rounded-lg shadow-inner border border-purple-700/30">
-                <Timer 
-                  key={`night-timer-${gameRoom.currentNightAction}-${gameRoom.nightTimeRemaining}`}
-                  seconds={gameRoom.nightTimeRemaining || 30} 
-                  large 
-                  paused={gameRoom.isAutoSkipping}
-                  onComplete={() => {
-                    if (gameRoom.currentNightAction) {
-                      // If player can perform the action but hasn't done so, auto-submit
-                      if (canPerformAction && gameRoom.currentNightAction) {
-                        // Auto-submit with empty data
-                        performNightAction(gameRoom.currentNightAction, {});
-                        setShowActionModal(false);
+            
+            {/* Animated lines */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-purple-500 to-transparent top-1/4 left-0 opacity-30"></div>
+              <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent top-3/4 left-0 opacity-30"></div>
+            </div>
+            
+            {/* Content */}
+            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center p-6">
+              <div className="mb-4 sm:mb-0">
+                <h2 className="text-3xl font-bold text-white flex items-center">
+                  <div className="relative mr-3">
+                    <span className="text-4xl">🌙</span>
+                    <div className="absolute -inset-2 bg-yellow-500/20 rounded-full blur-md -z-10"></div>
+                  </div>
+                  Night Phase
+                </h2>
+                <p className="text-purple-200 mt-1">The village sleeps while secret roles are performed</p>
+              </div>
+              <div className="flex items-center">
+                <div className="bg-gray-900/70 backdrop-blur-sm px-6 py-4 rounded-lg shadow-inner border border-purple-500/30">
+                  <Timer 
+                    key={`night-timer-${gameRoom.currentNightAction}-${gameRoom.nightTimeRemaining}`}
+                    seconds={gameRoom.nightTimeRemaining || 30} 
+                    large 
+                    paused={gameRoom.isAutoSkipping}
+                    onComplete={() => {
+                      if (gameRoom.currentNightAction) {
+                        // If player can perform the action but hasn't done so, auto-submit
+                        if (canPerformAction && gameRoom.currentNightAction) {
+                          // Auto-submit with empty data
+                          performNightAction(gameRoom.currentNightAction, {});
+                          setShowActionModal(false);
+                        }
+                        // For players who can't perform this action, we still need to send a skip
+                        else if (!canPerformAction) {
+                          performNightAction(gameRoom.currentNightAction, {});
+                        }
                       }
-                      // For players who can't perform this action, we still need to send a skip
-                      else if (!canPerformAction) {
-                        performNightAction(gameRoom.currentNightAction, {});
-                      }
-                    }
-                  }} 
-                  completeText="Waiting for next action..."
-                />
+                    }} 
+                    completeText="Waiting for next action..."
+                  />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Main Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Current Action Panel */}
-          <div className="md:col-span-2">
-            <div className="bg-gradient-to-br from-indigo-900/80 to-gray-900 rounded-xl shadow-2xl overflow-hidden border border-indigo-900/30">
-              <div className="relative">
-                {/* Decorative top element */}
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
-                
-                <div className="p-8 text-center">
-                  <div className="mb-6 flex justify-center">
-                    <div className={`transform transition-all duration-1000 ${gameRoom.currentNightAction ? 'scale-100 opacity-100' : 'scale-95 opacity-70'}`}>
-                      <div className="relative w-32 h-32 flex items-center justify-center mb-4 mx-auto">
-                        <div className="absolute inset-0 bg-purple-900/30 rounded-full animate-pulse-slow"></div>
-                        <div className="absolute inset-2 bg-indigo-900/40 rounded-full animate-pulse-slow animation-delay-300"></div>
-                        {/* Night phase action icon */}
-                        <div className="relative z-10 text-5xl">
-                          {gameRoom.currentNightAction === 'doppelganger' && '🎭'}
-                          {gameRoom.currentNightAction === 'werewolves' && '🐺'}
-                          {gameRoom.currentNightAction === 'minion' && '🦹'}
-                          {gameRoom.currentNightAction === 'mason' && '👷'}
-                          {gameRoom.currentNightAction === 'seer' && '👁️'}
-                          {gameRoom.currentNightAction === 'robber' && '🔄'}
-                          {gameRoom.currentNightAction === 'troublemaker' && '👥'}
-                          {gameRoom.currentNightAction === 'drunk' && '🍺'}
-                          {gameRoom.currentNightAction === 'insomniac' && '😴'}
-                          {!gameRoom.currentNightAction && '💤'}
+          
+          {/* Main Content */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Current Action Panel */}
+            <div className="md:col-span-2">
+              <div className="bg-gradient-to-br from-indigo-900/60 to-gray-900/60 rounded-xl shadow-2xl overflow-hidden border border-indigo-500/20 backdrop-blur-md animate-fade-in">
+                <div className="relative">
+                  {/* Decorative top element */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+                  
+                  <div className="p-8 text-center">
+                    <div className="mb-6 flex justify-center">
+                      <div className={`transform transition-all duration-1000 ${gameRoom.currentNightAction ? 'scale-100 opacity-100' : 'scale-95 opacity-70'}`}>
+                        <div className="relative w-32 h-32 flex items-center justify-center mb-4 mx-auto">
+                          {/* Pulsing rings */}
+                          <div className="absolute inset-0 bg-purple-900/30 rounded-full animate-pulse-slow"></div>
+                          <div className="absolute inset-2 bg-indigo-900/40 rounded-full animate-pulse-slow animation-delay-300"></div>
+                          
+                          {/* Glowing effect */}
+                          <div className="absolute inset-0 bg-indigo-500/20 rounded-full filter blur-xl"></div>
+                          
+                          {/* Night phase action icon */}
+                          <div className="relative z-10 text-5xl">
+                            {gameRoom.currentNightAction === 'doppelganger' && '🎭'}
+                            {gameRoom.currentNightAction === 'werewolves' && '🐺'}
+                            {gameRoom.currentNightAction === 'minion' && '🦹'}
+                            {gameRoom.currentNightAction === 'mason' && '👷'}
+                            {gameRoom.currentNightAction === 'seer' && '👁️'}
+                            {gameRoom.currentNightAction === 'robber' && '🔄'}
+                            {gameRoom.currentNightAction === 'troublemaker' && '👥'}
+                            {gameRoom.currentNightAction === 'drunk' && '🍺'}
+                            {gameRoom.currentNightAction === 'insomniac' && '😴'}
+                            {!gameRoom.currentNightAction && '💤'}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <h3 className="text-2xl font-bold text-white mb-4">
-                    {gameRoom.currentNightAction ? (
-                      <>
-                        Current Action: <span className="text-purple-300">
-                          {gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)}
-                        </span>
-                      </>
-                    ) : (
-                      "Waiting for next action..."
-                    )}
-                  </h3>
-                  
-                  <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-5 max-w-xl mx-auto border border-indigo-800/30">
-                    <p className="text-xl text-gray-300 mb-6">
-                      {canPerformAction 
-                        ? "It's your turn to perform your role's action"
-                        : gameRoom.nightTimeRemaining === 0
-                          ? "Waiting for next role..."
-                          : "Please wait while other players perform their actions"}
-                    </p>
                     
-                    {canPerformAction ? (
-                      <Button 
-                        onClick={() => setShowActionModal(true)}
-                        className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 text-lg rounded-lg transition-all transform hover:translate-y-[-2px] shadow-lg hover:shadow-xl"
-                      >
-                        <span className="flex items-center justify-center">
-                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                          Perform Action
-                        </span>
-                      </Button>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <div className="inline-flex items-center px-4 py-2 bg-gray-800 text-gray-400 rounded-lg">
-                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Waiting for other players...
+                    <h3 className="text-2xl font-bold text-white mb-4">
+                      {gameRoom.currentNightAction ? (
+                        <>
+                          Current Action: <span className="text-purple-300">
+                            {gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)}
+                          </span>
+                        </>
+                      ) : (
+                        "Waiting for next action..."
+                      )}
+                    </h3>
+                    
+                    <div className="bg-gray-800/60 backdrop-blur-sm rounded-lg p-5 max-w-xl mx-auto border border-indigo-500/20">
+                      <p className="text-xl text-gray-300 mb-6">
+                        {canPerformAction 
+                          ? "It's your turn to perform your role's action"
+                          : gameRoom.nightTimeRemaining === 0
+                            ? "Waiting for next role..."
+                            : "Please wait while other players perform their actions"}
+                      </p>
+                      
+                      {canPerformAction ? (
+                        <Button 
+                          onClick={() => setShowActionModal(true)}
+                          className="bg-indigo-600/90 hover:bg-indigo-700 text-white px-6 py-3 text-lg rounded-lg transition-all transform hover:translate-y-[-2px] shadow-lg hover:shadow-xl border border-indigo-500/30"
+                        >
+                          <span className="flex items-center justify-center">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Perform Action
+                          </span>
+                        </Button>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <div className="inline-flex items-center px-4 py-2 bg-gray-800/80 backdrop-blur-sm text-gray-400 rounded-lg border border-gray-700/30">
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Waiting for other players...
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          {/* Controls Column */}
-          <div className="space-y-6">
-            {/* View Role Button - enhanced for mobile */}
-            {(gameRoom.phase === 'results' || (gameRoom.phase === 'night' && canViewRoleDuringNight)) && (
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-purple-800/30 p-4 md:p-6">
-                <Button 
-                  variant="ghost" 
-                  fullWidth 
-                  onClick={() => setShowRoleModal(true)}
-                  className="bg-purple-900/50 hover:bg-purple-800/70 text-white border border-purple-700/50 shadow-inner py-4 text-lg flex items-center justify-center gap-3"
-                >
-                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-800/70 shadow-inner">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                  <span className="font-medium">View Your Role</span>
-                </Button>
-              </div>
-            )}
             
-            {/* Add Night Audio Controls for all players */}
-            <NightAudioControls 
-              currentNightAction={gameRoom.currentNightAction} 
-              onNarrationEnd={() => console.log('Narration ended')}
-            />
-            
-            {/* Night Sequence */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 relative">
-              {/* Stars background effect */}
-              <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/50 to-purple-950/50"></div>
-              <div className="absolute inset-0 stars-1"></div>
-              <div className="absolute inset-0 stars-2"></div>
-              <div className="absolute inset-0 stars-3"></div>
-              <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/40 relative z-10">
-                <h3 className="font-bold text-white flex items-center">
-                  <span className="mr-2">🌠</span> Night Sequence
-                </h3>
+            {/* Controls Column */}
+            <div className="space-y-6">
+              {/* View Role Button - enhanced for mobile */}
+              {(gameRoom.phase === 'results' || (gameRoom.phase === 'night' && canViewRoleDuringNight)) && (
+                <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-purple-500/20 p-4 md:p-6 animate-fade-in">
+                  <Button 
+                    variant="ghost" 
+                    fullWidth 
+                    onClick={() => setShowRoleModal(true)}
+                    className="bg-purple-900/50 hover:bg-purple-800/70 text-white border border-purple-500/50 shadow-inner py-4 text-lg flex items-center justify-center gap-3"
+                  >
+                    <div className="flex items-center justify-center h-10 w-10 rounded-full bg-purple-800/70 shadow-inner">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">View Your Role</span>
+                  </Button>
+                </div>
+              )}
+              
+              {/* Add Night Audio Controls for all players */}
+              <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <NightAudioControls 
+                  currentNightAction={gameRoom.currentNightAction} 
+                  onNarrationEnd={() => console.log('Narration ended')}
+                />
               </div>
-              <div className="p-5 relative">
-                {/* Timeline Track */}
-                <div className="absolute left-8 top-7 bottom-7 w-1 bg-indigo-900/50 rounded-full"></div>
-                
-                <div className="space-y-6 relative z-10">
-                  {['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
-                    // Determine if this role has already gone, is current, or is upcoming
-                    const isCurrent = gameRoom.currentNightAction === role;
-                    const hasGone = !gameRoom.currentNightAction 
-                      ? false 
-                      : ['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac']
-                          .indexOf(gameRoom.currentNightAction) > index;
-                    
-                    // Check if this role is in the game
-                    const roleInGame = (gameRoom.selectedRoles || []).some((gameRole: Role) => {
-                      // Map the night action back to a role
-                      const mappedRole = role === 'werewolves' ? 'werewolf' : role;
-                      return gameRole === mappedRole;
-                    });
-                    
-                    // Only show roles that are in the game
-                    if (!roleInGame) return null;
-                    
-                    // Determine if this is the current player's role
-                    const isYourRole = isCurrent && canPerformAction;
-                    
-                    // Animation classes based on status
-                    const timelineNodeClass = isCurrent 
-                      ? 'bg-yellow-300 ring-4 ring-yellow-300/20 scale-125 animate-pulse-slow'
-                      : hasGone 
-                        ? 'bg-green-500'
-                        : 'bg-indigo-600';
-                    
-                    const timelineLabelClass = isCurrent
-                      ? 'text-yellow-300 font-medium transform translate-x-2 transition-all duration-300'
-                      : hasGone 
-                        ? 'text-green-500'
-                        : 'text-indigo-400';
-                        
-                    // Role icons
-                    const roleIcons = {
-                      doppelganger: '🎭',
-                      werewolves: '🐺',
-                      minion: <img src="/images/minion.jpg" alt="Minion" className="w-6 h-6 rounded-full object-cover" />,
-                      mason: '🛠️',
-                      seer: '👁️',
-                      robber: '🥷',
-                      troublemaker: '😈',
-                      drunk: '🍺',
-                      insomniac: '😴'
-                    };
-                    
-                    return (
-                      <div key={role} className="flex items-center group">
-                        {/* Timeline Node */}
-                        <div className={`w-4 h-4 rounded-full ${timelineNodeClass} shadow-lg z-20 transition-all duration-500 ease-in-out`}></div>
-                        
-                        {/* Content Container */}
-                        <div className={`ml-6 flex items-center bg-indigo-900/30 backdrop-blur-sm px-4 py-3 rounded-lg transition-all duration-300 ${isCurrent ? 'shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''} ${hasGone ? 'opacity-75' : 'opacity-100'}`}>
-                          {/* Role Icon with Animation */}
-                          <span className={`text-2xl mr-3 ${isCurrent ? 'animate-bounce-subtle' : ''}`}>
-                            {roleIcons[role as keyof typeof roleIcons]}
-                          </span>
+              
+              {/* Night Sequence */}
+              <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-indigo-500/20 relative animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                {/* Stars background effect */}
+                <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/50 to-purple-950/50"></div>
+                <div className="absolute inset-0 stars-1"></div>
+                <div className="absolute inset-0 stars-2"></div>
+                <div className="absolute inset-0 stars-3"></div>
+                <div className="px-5 py-4 border-b border-indigo-800/30 bg-indigo-900/40 relative z-10">
+                  <h3 className="font-bold text-white flex items-center">
+                    <span className="mr-2">🌠</span> Night Sequence
+                  </h3>
+                </div>
+                <div className="p-5 relative">
+                  {/* Timeline Track - glowing effect */}
+                  <div className="absolute left-8 top-7 bottom-7 w-1 bg-indigo-900/50 rounded-full"></div>
+                  <div className="absolute left-8 top-7 bottom-7 w-1 bg-indigo-500/30 rounded-full blur-sm"></div>
+                  
+                  <div className="space-y-6 relative z-10">
+                    {['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac'].map((role, index) => {
+                      // Determine if this role has already gone, is current, or is upcoming
+                      const isCurrent = gameRoom.currentNightAction === role;
+                      const hasGone = !gameRoom.currentNightAction 
+                        ? false 
+                        : ['doppelganger', 'werewolves', 'minion', 'mason', 'seer', 'robber', 'troublemaker', 'drunk', 'insomniac']
+                            .indexOf(gameRoom.currentNightAction) > index;
+                      
+                      // Check if this role is in the game
+                      const roleInGame = (gameRoom.selectedRoles || []).some((gameRole: Role) => {
+                        // Map the night action back to a role
+                        const mappedRole = role === 'werewolves' ? 'werewolf' : role;
+                        return gameRole === mappedRole;
+                      });
+                      
+                      // Only show roles that are in the game
+                      if (!roleInGame) return null;
+                      
+                      // Determine if this is the current player's role
+                      const isYourRole = isCurrent && canPerformAction;
+                      
+                      // Animation classes based on status
+                      const timelineNodeClass = isCurrent 
+                        ? 'bg-yellow-300 ring-4 ring-yellow-300/20 scale-125 animate-pulse-slow'
+                        : hasGone 
+                          ? 'bg-green-500'
+                          : 'bg-indigo-600';
+                      
+                      const timelineLabelClass = isCurrent
+                        ? 'text-yellow-300 font-medium transform translate-x-2 transition-all duration-300'
+                        : hasGone 
+                          ? 'text-green-500'
+                          : 'text-indigo-400';
+                      
+                      // Role icons
+                      const roleIcons = {
+                        doppelganger: '🎭',
+                        werewolves: '🐺',
+                        minion: <img src="/images/minion.jpg" alt="Minion" className="w-6 h-6 rounded-full object-cover" />,
+                        mason: '🛠️',
+                        seer: '👁️',
+                        robber: '🥷',
+                        troublemaker: '😈',
+                        drunk: '🍺',
+                        insomniac: '😴'
+                      };
+                      
+                      return (
+                        <div key={role} className="flex items-center group">
+                          {/* Timeline Node */}
+                          <div className={`w-4 h-4 rounded-full ${timelineNodeClass} shadow-lg z-20 transition-all duration-500 ease-in-out`}></div>
                           
-                          {/* Role Name */}
-                          <div className="flex flex-col">
-                            <span className={`font-medium ${timelineLabelClass} transition-all duration-300`}>
-                              {role.charAt(0).toUpperCase() + role.slice(1)}
+                          {/* Content Container */}
+                          <div className={`ml-6 flex items-center bg-indigo-900/30 backdrop-blur-sm px-4 py-3 rounded-lg transition-all duration-300 ${isCurrent ? 'shadow-[0_0_15px_rgba(234,179,8,0.3)]' : ''} ${hasGone ? 'opacity-75' : 'opacity-100'}`}>
+                            {/* Role Icon with Animation */}
+                            <span className={`text-2xl mr-3 ${isCurrent ? 'animate-bounce-subtle' : ''}`}>
+                              {roleIcons[role as keyof typeof roleIcons]}
                             </span>
                             
-                            {/* "YOU" indicator - only shows when it's this player's turn */}
-                            {isYourRole && (
-                              <div className="mt-1 flex items-center">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-400 to-purple-500 text-white shadow-glow animate-pulse-slow">
-                                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                            {/* Role Name */}
+                            <div className="flex flex-col">
+                              <span className={`font-medium ${timelineLabelClass} transition-all duration-300`}>
+                                {role.charAt(0).toUpperCase() + role.slice(1)}
+                              </span>
+                              
+                              {/* "YOU" indicator - only shows when it's this player's turn */}
+                              {isYourRole && (
+                                <div className="mt-1 flex items-center">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-400 to-purple-500 text-white shadow-glow animate-pulse-slow">
+                                    <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                    </svg>
+                                    YOUR TURN
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Status Indicator */}
+                            <span className="ml-auto">
+                              {hasGone && (
+                                <span className="text-green-500 animate-fade-in">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                   </svg>
-                                  YOUR TURN
                                 </span>
-                              </div>
-                            )}
+                              )}
+                              {isCurrent && !isYourRole && (
+                                <span className="text-yellow-300 animate-pulse">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                  </svg>
+                                </span>
+                              )}
+                              {isCurrent && isYourRole && (
+                                <span className="text-cyan-400 animate-bounce-subtle">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
+                                  </svg>
+                                </span>
+                              )}
+                            </span>
                           </div>
-                          
-                          {/* Status Indicator */}
-                          <span className="ml-auto">
-                            {hasGone && (
-                              <span className="text-green-500 animate-fade-in">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </span>
-                            )}
-                            {isCurrent && !isYourRole && (
-                              <span className="text-yellow-300 animate-pulse">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-                                </svg>
-                              </span>
-                            )}
-                            {isCurrent && isYourRole && (
-                              <span className="text-cyan-400 animate-bounce-subtle">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clipRule="evenodd" />
-                                </svg>
-                              </span>
-                            )}
-                          </span>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            {/* Host Controls - Only shown to host */}
-            {isHost && (
-              <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
-                <div className="px-5 py-4 border-b border-purple-800/30">
-                  <h3 className="font-bold text-white flex items-center">
-                    <span className="mr-2">👑</span> Host Controls
+              
+              {/* Host Controls - Only shown to host */}
+              {isHost && (
+                <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
+                  <div className="px-5 py-4 border-b border-purple-800/30">
+                    <h3 className="font-bold text-white flex items-center">
+                      <span className="mr-2">👑</span> Host Controls
+                    </h3>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-gray-300 mb-4 text-sm">
+                      As host, you can skip the current role's timer and move immediately 
+                      to the next role or to the day phase.
+                    </p>
+                    <Button 
+                      fullWidth 
+                      onClick={() => {
+                        const currentRole = gameRoom.currentNightAction
+                          ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
+                          : 'current';
+                        
+                        showConfirmation(
+                          `Skip ${currentRole} Timer`,
+                          `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`,
+                          skipCurrentNightAction
+                        );
+                      }}
+                      className="bg-purple-700 hover:bg-purple-600 transition-all transform hover:translate-y-[-2px] shadow-lg"
+                    >
+                      <span className="flex items-center justify-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
+                        </svg>
+                        Skip {gameRoom.currentNightAction 
+                          ? `${gameRoom.currentNightAction.charAt(0).toUpperCase()}${gameRoom.currentNightAction.slice(1)}` 
+                          : 'Current'} Timer
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Game Tips Box */}
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30">
+                <div className="px-5 py-4 border-b border-blue-800/30 bg-blue-900/30">
+                  <h3 className="text-lg font-bold text-white flex items-center">
+                    <span className="mr-2">💡</span> Night Phase Tips
                   </h3>
                 </div>
                 <div className="p-5">
-                  <p className="text-gray-300 mb-4 text-sm">
-                    As host, you can skip the current role's timer and move immediately 
-                    to the next role or to the day phase.
-                  </p>
-                  <Button 
-                    fullWidth 
-                    onClick={() => {
-                      const currentRole = gameRoom.currentNightAction
-                        ? gameRoom.currentNightAction.charAt(0).toUpperCase() + gameRoom.currentNightAction.slice(1)
-                        : 'current';
-                      
-                      showConfirmation(
-                        `Skip ${currentRole} Timer`,
-                        `Are you sure you want to skip the ${currentRole} timer? This will move the game to the next role immediately.`,
-                        skipCurrentNightAction
-                      );
-                    }}
-                    className="bg-purple-700 hover:bg-purple-600 transition-all transform hover:translate-y-[-2px] shadow-lg"
-                  >
-                    <span className="flex items-center justify-center">
-                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" />
-                      </svg>
-                      Skip {gameRoom.currentNightAction 
-                        ? `${gameRoom.currentNightAction.charAt(0).toUpperCase()}${gameRoom.currentNightAction.slice(1)}` 
-                        : 'Current'} Timer
-                    </span>
-                  </Button>
+                  <ul className="text-sm text-gray-300 space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span>Each role wakes up in a specific order</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span>Some roles can view or swap cards</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span>Your original role might change during the night</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-indigo-400 mr-2">•</span>
+                      <span>Remember what you learn for the day discussion!</span>
+                    </li>
+                  </ul>
                 </div>
-              </div>
-            )}
-            
-            {/* Game Tips Box */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30">
-              <div className="px-5 py-4 border-b border-blue-800/30 bg-blue-900/30">
-                <h3 className="text-lg font-bold text-white flex items-center">
-                  <span className="mr-2">💡</span> Night Phase Tips
-                </h3>
-              </div>
-              <div className="p-5">
-                <ul className="text-sm text-gray-300 space-y-2">
-                  <li className="flex items-start">
-                    <span className="text-indigo-400 mr-2">•</span>
-                    <span>Each role wakes up in a specific order</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-indigo-400 mr-2">•</span>
-                    <span>Some roles can view or swap cards</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-indigo-400 mr-2">•</span>
-                    <span>Your original role might change during the night</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-indigo-400 mr-2">•</span>
-                    <span>Remember what you learn for the day discussion!</span>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>

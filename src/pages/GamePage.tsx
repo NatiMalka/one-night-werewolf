@@ -842,131 +842,175 @@ const GamePage: React.FC = () => {
   // Render for Day Phase
   const renderDayPhase = () => {
     return (
-      <div className="container mx-auto px-4 py-6">
-        {/* Header with moon/night background and timer */}
-        <div className="relative mb-8 bg-gradient-to-r from-indigo-900/80 to-blue-900/80 rounded-xl overflow-hidden shadow-2xl">
-          <div className="absolute inset-0 bg-cover bg-center opacity-20"
-               style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
-          <div className="relative z-10 flex justify-between items-center p-6">
-            <div>
-              <h2 className="text-3xl font-bold text-white flex items-center">
-                <span className="mr-3">🌞</span>
-                Day Phase
-              </h2>
-              <p className="text-blue-200 mt-1">Discuss with other players to deduce the werewolf</p>
-            </div>
-            <div className="flex items-center">
-              <div className="bg-gray-900/60 backdrop-blur-sm px-4 py-3 rounded-lg">
-                <Timer 
-                  key={`day-timer-${gameRoom.dayTimeRemaining || 300}`}
-                  seconds={gameRoom.dayTimeRemaining || 300} 
-                  large
-                  onComplete={() => {
-                    console.log("Day phase timer complete");
-                  }} 
-                />
-              </div>
-            </div>
-          </div>
+      <div className="min-h-screen relative overflow-hidden">
+        {/* Background elements - animated gradients and effects */}
+        <div className="fixed inset-0 bg-gray-950 z-0">
+          {/* Main background gradient - day theme with blue/amber */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-800 via-indigo-900 to-purple-950 opacity-80"></div>
+          
+          {/* Sun glow */}
+          <div className="absolute top-10 right-10 w-64 h-64 bg-yellow-300 rounded-full filter blur-3xl opacity-15 animate-pulse-slow"></div>
+          <div className="absolute top-14 right-14 w-48 h-48 bg-amber-500 rounded-full filter blur-3xl opacity-10 animate-pulse-slow animation-delay-300"></div>
+          
+          {/* Animated blobs representing day energies */}
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-cyan-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+          <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-amber-500 rounded-full mix-blend-multiply filter blur-3xl opacity-5 animate-blob animation-delay-4000"></div>
+          
+          {/* Light rays effect */}
+          <div className="absolute top-0 right-20 w-[1px] h-screen bg-yellow-300/20 transform rotate-[20deg] shadow-lg shadow-yellow-300/10"></div>
+          <div className="absolute top-0 right-40 w-[1px] h-screen bg-yellow-400/10 transform rotate-[15deg] shadow-lg shadow-yellow-400/5"></div>
+          <div className="absolute top-0 right-80 w-[1px] h-screen bg-yellow-500/10 transform rotate-[25deg] shadow-lg shadow-yellow-500/5"></div>
+          
+          {/* Subtle stars still visible in day */}
+          <div className="stars-1 opacity-30"></div>
+          
+          {/* Vignette effect - lighter for day */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950 via-transparent to-indigo-950 opacity-40"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-950 via-transparent to-indigo-950 opacity-40"></div>
         </div>
         
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Chat Section - Takes up more space */}
-          <div className="lg:col-span-3 flex flex-col">
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 flex-1">
-              <ChatBox 
-                messages={chatMessages}
-                onSendMessage={sendChatMessage}
-                className="h-[550px]" 
-              />
+        {/* Content */}
+        <div className="container mx-auto px-4 py-6 relative z-10">
+          {/* Header with day background and timer */}
+          <div className="relative mb-8 bg-gradient-to-r from-blue-900/60 to-indigo-800/60 rounded-xl overflow-hidden shadow-2xl backdrop-blur-md border border-blue-500/20">
+            <div className="absolute inset-0 bg-cover bg-center opacity-20"
+                 style={{ backgroundImage: "url('/images/night-sky.jpg')" }}></div>
+                 
+            {/* Subtle pattern overlay */}
+            <div className="absolute inset-0 opacity-5" 
+                 style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%239C92AC' fill-opacity='0.4' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E')" }}></div>
+            
+            {/* Animated lines */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-blue-500 to-transparent top-1/4 left-0 opacity-30"></div>
+              <div className="absolute h-px w-full bg-gradient-to-r from-transparent via-indigo-500 to-transparent top-3/4 left-0 opacity-30"></div>
+            </div>
+                 
+            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center p-6">
+              <div className="mb-4 sm:mb-0">
+                <h2 className="text-3xl font-bold text-white flex items-center">
+                  <div className="relative mr-3">
+                    <span className="text-4xl">🌞</span>
+                    <div className="absolute -inset-2 bg-amber-500/20 rounded-full blur-md -z-10"></div>
+                  </div>
+                  Day Phase
+                </h2>
+                <p className="text-blue-200 mt-1">Discuss with other players to deduce the werewolf</p>
+              </div>
+              <div className="flex items-center">
+                <div className="bg-gray-900/60 backdrop-blur-sm px-4 py-3 rounded-lg shadow-inner border border-blue-500/30">
+                  <Timer 
+                    key={`day-timer-${gameRoom.dayTimeRemaining || 300}`}
+                    seconds={gameRoom.dayTimeRemaining || 300} 
+                    large
+                    onComplete={() => {
+                      console.log("Day phase timer complete");
+                    }} 
+                  />
+                </div>
+              </div>
             </div>
           </div>
           
-          {/* Players & Controls Section */}
-          <div className="lg:col-span-1 space-y-5">
-            {/* Player List Panel */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30">
-              <PlayerList 
-                players={gameRoom.players}
-                currentPlayerId={currentPlayer.id}
-                className="border-none"
-              />
+          {/* Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Chat Section - Takes up more space */}
+            <div className="lg:col-span-3 flex flex-col">
+              <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-blue-500/20 flex-1 animate-fade-in">
+                <ChatBox 
+                  messages={chatMessages}
+                  onSendMessage={sendChatMessage}
+                  className="h-[550px]" 
+                />
+              </div>
             </div>
             
-            {/* View Role Button - Only for host */}
-            {currentPlayer.isHost && (
-              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-blue-900/30 p-5">
-                <Button 
-                  variant="ghost" 
-                  fullWidth 
-                  onClick={() => setShowRoleModal(true)}
-                  className="bg-blue-900/50 hover:bg-blue-800/70 text-white border border-blue-700/50 shadow-inner py-3"
-                >
-                  <span className="flex items-center justify-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    View Your Role (Host Only)
-                  </span>
-                </Button>
+            {/* Players & Controls Section */}
+            <div className="lg:col-span-1 space-y-5">
+              {/* Player List Panel */}
+              <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-blue-500/20 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <PlayerList 
+                  players={gameRoom.players}
+                  currentPlayerId={currentPlayer.id}
+                  className="border-none"
+                />
               </div>
-            )}
-            
-            {/* Host Controls - Only shown to host */}
-            {currentPlayer.isHost && (
-              <div className="bg-gradient-to-br from-purple-900/80 to-gray-900 rounded-xl shadow-xl overflow-hidden border border-purple-900/30">
-                <div className="px-5 py-4 border-b border-purple-800/30">
-                  <h3 className="font-bold text-white flex items-center">
-                    <span className="mr-2">👑</span> Host Controls
-                  </h3>
-                </div>
-                <div className="p-5">
-                  <p className="text-gray-300 mb-4 text-sm">
-                    When everyone has finished discussing, start the voting phase to determine who gets eliminated.
-                  </p>
+              
+              {/* View Role Button - Only for host */}
+              {currentPlayer.isHost && (
+                <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-blue-500/20 p-5 animate-fade-in" style={{ animationDelay: '0.2s' }}>
                   <Button 
+                    variant="ghost" 
                     fullWidth 
-                    onClick={() => {
-                      showConfirmation(
-                        "Start Voting Phase",
-                        "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf.",
-                        startVotingPhase
-                      );
-                    }}
-                    className="bg-purple-700 hover:bg-purple-600 transition-all transform hover:translate-y-[-2px] shadow-lg"
+                    onClick={() => setShowRoleModal(true)}
+                    className="bg-blue-900/50 hover:bg-blue-800/70 text-white border border-blue-500/50 shadow-inner py-3"
                   >
                     <span className="flex items-center justify-center">
                       <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
-                      Start Voting
+                      View Your Role (Host Only)
                     </span>
                   </Button>
                 </div>
+              )}
+              
+              {/* Host Controls - Only shown to host */}
+              {currentPlayer.isHost && (
+                <div className="bg-gradient-to-br from-blue-900/60 to-indigo-900/60 rounded-xl shadow-xl overflow-hidden border border-blue-500/20 backdrop-blur-md animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <div className="px-5 py-4 border-b border-blue-800/30">
+                    <h3 className="font-bold text-white flex items-center">
+                      <span className="mr-2">👑</span> Host Controls
+                    </h3>
+                  </div>
+                  <div className="p-5">
+                    <p className="text-gray-300 mb-4 text-sm">
+                      When everyone has finished discussing, start the voting phase to determine who gets eliminated.
+                    </p>
+                    <Button 
+                      fullWidth 
+                      onClick={() => {
+                        showConfirmation(
+                          "Start Voting Phase",
+                          "Are you sure you want to end the discussion and move to the voting phase? All players will need to vote for who they think is the werewolf.",
+                          startVotingPhase
+                        );
+                      }}
+                      className="bg-blue-700 hover:bg-blue-600 transition-all transform hover:translate-y-[-2px] shadow-lg border border-blue-500/50"
+                    >
+                      <span className="flex items-center justify-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Start Voting
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Game Info Box */}
+              <div className="bg-gray-900/60 backdrop-blur-md rounded-xl shadow-xl overflow-hidden border border-blue-500/20 p-5 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <h4 className="font-semibold text-white mb-3 flex items-center">
+                  <span className="mr-2">ℹ️</span> Game Tips
+                </h4>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-blue-400 mr-2">•</span>
+                    <span>Discuss what role you claim to have</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-400 mr-2">•</span>
+                    <span>Consider if anyone's story doesn't add up</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-400 mr-2">•</span>
+                    <span>Remember roles might have changed during the night</span>
+                  </li>
+                </ul>
               </div>
-            )}
-            
-            {/* Game Info Box */}
-            <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl shadow-xl overflow-hidden border border-indigo-900/30 p-5">
-              <h4 className="font-semibold text-white mb-3 flex items-center">
-                <span className="mr-2">ℹ️</span> Game Tips
-              </h4>
-              <ul className="text-sm text-gray-300 space-y-2">
-                <li className="flex items-start">
-                  <span className="text-indigo-400 mr-2">•</span>
-                  <span>Discuss what role you claim to have</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-indigo-400 mr-2">•</span>
-                  <span>Consider if anyone's story doesn't add up</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-indigo-400 mr-2">•</span>
-                  <span>Remember roles might have changed during the night</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
